@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+    <!--
+        Standalone use only (upstream's waabe_navi_mcp): an "AI Modeler" ribbon tab with info and
+        start/stop buttons (Ribbon/Buttons.xml). In a Cemengal checkout CEM_RibbonUI hosts the server
+        instead and this plugin is not deployed (docs/decisions/0006).
+    -->
+    <PropertyGroup>
+        <RootNamespace>CEM_NavisIAModeler_Ribbon</RootNamespace>
+        <AssemblyName>CEM_NavisIAModeler_Ribbon</AssemblyName>
+        <UseWPF>true</UseWPF>
+        <UseWindowsForms>true</UseWindowsForms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="Microsoft.VisualBasic" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="System.Net.Http" />
+        <Reference Include="System.Net" />
+        <Reference Include="System.Windows.Controls.Ribbon" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="PackageContents.xml" />
+        <None Include="Ribbon\Buttons.xml" />
+        <None Include="Ribbon\Icons\*.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\CEM_NavisIAModeler_Shared\CEM_NavisIAModeler_Shared.csproj" />
+        <!-- Only so the standalone bundle carries the server; this plugin finds it through ServiceRegistry. -->
+        <ProjectReference Include="..\CEM_NavisIAModeler\CEM_NavisIAModeler.csproj" />
+    </ItemGroup>
+
+    <!--
+        Standalone bundle (docs/decisions/0002, 0006), replacing upstream's xcopy post-build events:
+          %APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisIAModeler.bundle\
+            PackageContents.xml
+            Contents\v<series>\  the three DLLs, mcp_manifest.json
+            Ribbon\Buttons.xml, Ribbon\Icons\*.png
+            Settings\
+        Runs only when CemStandaloneDeploy (no CEM_NavisworksAPI sibling, not built by its host) and
+        Navisworks Manage is installed; -p:DeployNavisworksBundle=true forces it, =false skips it.
+    -->
+    <Target Name="DeployNavisworksBundle" AfterTargets="Build" DependsOnTargets="ResolveNavisworksInstallDir"
+            Condition="'$(CemStandaloneDeploy)' == 'true' And '$(DeployNavisworksBundle)' != 'false'">
+        <PropertyGroup>
+            <_DeployNavisworks Condition="'$(DeployNavisworksBundle)' == 'true' Or Exists('$(NavisworksInstallDir)')">true</_DeployNavisworks>
+            <BundleDir>$(APPDATA)\Autodesk\ApplicationPlugins\CEM_NavisIAModeler.bundle\</BundleDir>
+            <BundleContentDir>$(BundleDir)Contents\v$(NavisworksSeries)\</BundleContentDir>
+        </PropertyGroup>
+        <ItemGroup>
+            <BundleContentFile Include="$(TargetDir)CEM_NavisIAModeler.dll;$(TargetDir)CEM_NavisIAModeler_Ribbon.dll;$(TargetDir)CEM_NavisIAModeler_Shared.dll;$(TargetDir)*.pdb;$(TargetDir)mcp_manifest.json" />
+            <BundleIcon Include="$(MSBuildThisFileDirectory)Ribbon\Icons\*.png" />
+        </ItemGroup>
+        <Copy Condition="'$(_DeployNavisworks)' == 'true'" SourceFiles="@(BundleContentFile)" DestinationFolder="$(BundleContentDir)" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+        <Copy Condition="'$(_DeployNavisworks)' == 'true'" SourceFiles="$(MSBuildThisFileDirectory)Ribbon\Buttons.xml" DestinationFolder="$(BundleDir)Ribbon" SkipUnchangedFiles="true" />
+        <Copy Condition="'$(_DeployNavisworks)' == 'true'" SourceFiles="@(BundleIcon)" DestinationFolder="$(BundleDir)Ribbon\Icons" SkipUnchangedFiles="true" />
+        <Copy Condition="'$(_DeployNavisworks)' == 'true'" SourceFiles="$(MSBuildThisFileDirectory)PackageContents.xml" DestinationFolder="$(BundleDir)" SkipUnchangedFiles="true" />
+        <MakeDir Condition="'$(_DeployNavisworks)' == 'true'" Directories="$(BundleDir)Settings" />
+        <Message Condition="'$(_DeployNavisworks)' == 'true'" Importance="high" Text="CEM_NavisIAModeler.bundle -> $(BundleDir)" />
+    </Target>
+
+</Project>

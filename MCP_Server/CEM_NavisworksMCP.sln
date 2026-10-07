@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CEM_NavisIAModeler_Ribbon", "CEM_NavisIAModeler_Ribbon\CEM_NavisIAModeler_Ribbon.csproj", "{0831E15B-8602-4DFC-9A54-03E741F7B042}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8BDF856D-859E-4762-AFE2-048CACEAEB7A} = {8BDF856D-859E-4762-AFE2-048CACEAEB7A}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CEM_NavisIAModeler_Shared", "CEM_NavisIAModeler_Shared\CEM_NavisIAModeler_Shared.csproj", "{8BDF856D-859E-4762-AFE2-048CACEAEB7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CEM_NavisIAModeler", "CEM_NavisIAModeler\CEM_NavisIAModeler.csproj", "{8F649E51-8419-4A07-8885-AA766FA96452}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug N27|Any CPU = Debug N27|Any CPU
+		Release N27|Any CPU = Release N27|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0831E15B-8602-4DFC-9A54-03E741F7B042}.Debug N27|Any CPU.ActiveCfg = Debug N27|Any CPU
+		{0831E15B-8602-4DFC-9A54-03E741F7B042}.Debug N27|Any CPU.Build.0 = Debug N27|Any CPU
+		{0831E15B-8602-4DFC-9A54-03E741F7B042}.Release N27|Any CPU.ActiveCfg = Release N27|Any CPU
+		{0831E15B-8602-4DFC-9A54-03E741F7B042}.Release N27|Any CPU.Build.0 = Release N27|Any CPU
+		{8BDF856D-859E-4762-AFE2-048CACEAEB7A}.Debug N27|Any CPU.ActiveCfg = Debug N27|Any CPU
+		{8BDF856D-859E-4762-AFE2-048CACEAEB7A}.Debug N27|Any CPU.Build.0 = Debug N27|Any CPU
+		{8BDF856D-859E-4762-AFE2-048CACEAEB7A}.Release N27|Any CPU.ActiveCfg = Release N27|Any CPU
+		{8BDF856D-859E-4762-AFE2-048CACEAEB7A}.Release N27|Any CPU.Build.0 = Release N27|Any CPU
+		{8F649E51-8419-4A07-8885-AA766FA96452}.Debug N27|Any CPU.ActiveCfg = Debug N27|Any CPU
+		{8F649E51-8419-4A07-8885-AA766FA96452}.Debug N27|Any CPU.Build.0 = Debug N27|Any CPU
+		{8F649E51-8419-4A07-8885-AA766FA96452}.Release N27|Any CPU.ActiveCfg = Release N27|Any CPU
+		{8F649E51-8419-4A07-8885-AA766FA96452}.Release N27|Any CPU.Build.0 = Release N27|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2D029E89-839D-4EC9-BB1C-0DD1E01BA403}
+	EndGlobalSection
+EndGlobal

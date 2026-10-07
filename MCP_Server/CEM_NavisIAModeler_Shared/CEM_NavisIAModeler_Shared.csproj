@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>CEM_NavisIAModeler_Shared</RootNamespace>
+        <AssemblyName>CEM_NavisIAModeler_Shared</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="System.Net.Http" />
+    </ItemGroup>
+
+</Project>

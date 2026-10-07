@@ -1,0 +1,70 @@
+<Project>
+    <!--
+        Cemengal port (docs/decisions/0001): SDK-style projects for Navisworks Manage 2027
+        (API 24, .NET Framework 4.8), built without a Navisworks install. The year comes from the
+        configuration name, as in CEM_NavisworksAPI: "Debug N27" / "Release N27".
+    -->
+    <PropertyGroup>
+        <Configurations>Debug N27;Release N27</Configurations>
+        <PlatformTarget>x64</PlatformTarget>
+        <LangVersion>latest</LangVersion>
+        <!-- Upstream keeps its own Properties/AssemblyInfo.cs. -->
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(Configuration.Contains('N27'))">
+        <NavisworksVersion>2027</NavisworksVersion>
+        <!-- Bundle folder and PackageContents series for this year: v24 / Nw24. -->
+        <NavisworksSeries>24</NavisworksSeries>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+
+    <!--
+        A project built from another solution gets no "N<yy>" configuration: MSBuild unsets it for a
+        ProjectReference outside the building solution (CEM_RibbonUI building CEM_NavisworksMCP's server).
+        Then default to the current year, so the build still targets net48.
+    -->
+    <PropertyGroup Condition="'$(NavisworksVersion)' == ''">
+        <NavisworksVersion>2027</NavisworksVersion>
+        <NavisworksSeries>24</NavisworksSeries>
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+
+    <!--
+        Where Navisworks Manage <year> is installed: the registry's install path (it need not be under
+        Program Files), else the default folder. Deploy targets run only when this folder exists.
+    -->
+    <PropertyGroup Condition="'$(NavisworksInstallDir)' == '' And '$(NavisworksSeries)' != ''">
+        <NavisworksInstallDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Autodesk\Navisworks Manage\$(NavisworksSeries).0\Location', 'Path', null, RegistryView.Registry64))</NavisworksInstallDir>
+        <NavisworksInstallDir>$(NavisworksInstallDir.TrimEnd('\'))</NavisworksInstallDir>
+        <NavisworksInstallDir Condition="'$(NavisworksInstallDir)' == ''">C:\Program Files\Autodesk\Navisworks Manage $(NavisworksVersion)</NavisworksInstallDir>
+    </PropertyGroup>
+
+    <!--
+        Who deploys (docs/decisions/0006, after CEM_RevitMCP's 0011/0024): in a Cemengal checkout,
+        CEM_NavisworksAPI's CEM_RibbonUI hosts CEM_NavisIAModeler and ships it in its own bundle, so the
+        fork's standalone bundle is never deployed, however the build is entered. CemRibbonHostBuild is
+        also passed by the host's ProjectReference.
+    -->
+    <PropertyGroup>
+        <CemRibbonHostPresent Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\CEM_NavisworksAPI\CEM_RibbonUI\CEM_RibbonUI.csproj')">true</CemRibbonHostPresent>
+        <CemStandaloneDeploy Condition="'$(CemRibbonHostBuild)' != 'true' And '$(CemRibbonHostPresent)' != 'true'">true</CemStandaloneDeploy>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(Configuration.StartsWith('Debug'))">
+        <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+        <Optimize>false</Optimize>
+        <DebugType>full</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(Configuration.StartsWith('Release'))">
+        <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+        <Optimize>true</Optimize>
+        <DebugType>pdbonly</DebugType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+        <!-- Navisworks API, compile-only: Navisworks loads its own copies at runtime (docs/decisions/0001). -->
+        <PackageReference Include="Speckle.Navisworks.API" Version="$(NavisworksVersion).*" ExcludeAssets="runtime" PrivateAssets="all" />
+    </ItemGroup>
+</Project>

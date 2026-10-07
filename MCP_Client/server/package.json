@@ -1,5 +1,5 @@
 {
-  "name": "waabe-navisworks-mcp-server",
+  "name": "cem-navis-aimodeler",
   "version": "1.0.0",
   "description": "Navisworks MCP Server for Element Queries",
   "main": "index.js",
@@ -13,9 +13,10 @@
   },
   "scripts": {
     "start": "node index.js",
+    "test": "node --test \"tests/*.test.mjs\"",
     "inspector": "npx @modelcontextprotocol/inspector node index.js"
   },
   "keywords": ["mcp", "navisworks", "api", "desktop-extension"],
-  "author": "WAABE",
+  "author": "Cemengal (fork of WAABE's proof of concept)",
   "license": "MIT"
 }

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+  SchemaVersion="1.0"
+  Name="CEM_NavisIAModeler_Ribbon"
+  AppVersion="1.0.0"
+  Description="Navisworks AddIn mit Ribbon, Button-Handler und XML-Konfiguration"
+  Author="Cemengal"
+  ProductCode="{0831e15b-8602-4dfc-9a54-03e741f7b042}">
+
+	<CompanyDetails Name="Cemengal"/>
+
+	<Components Description="Navisworks 2027">
+		<RuntimeRequirements OS="Win64" Platform="NAVMAN|NAVSIM" SeriesMin="Nw24" SeriesMax="Nw24"/>
+		
+		<ComponentEntry
+		  AppName="CEM_NavisIAModeler_Ribbon"
+		  AppType="ManagedPlugin"
+		  Version="1.0.0"
+		  ModuleName="Contents\v24\CEM_NavisIAModeler_Ribbon.dll"
+		  AppDescription="Ribbon, Button-Handler und Dateiliste für Navisworks 2027"/>
+		<ComponentEntry
+		  AppName="CEM_NavisIAModeler"
+		  AppType="ManagedPlugin"
+		  Version="1.0.0"
+		  ModuleName="Contents\v24\CEM_NavisIAModeler.dll"
+		  AppDescription="MCP Server für Navisworks 2027"/>
+	</Components>
+</ApplicationPackage>

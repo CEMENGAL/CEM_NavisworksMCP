@@ -1,6 +1,8 @@
 # .dxtignore
 *.test.js
 *.test.ts
+*.test.mjs
+server/tests/
 coverage/
 *.log
 .env*

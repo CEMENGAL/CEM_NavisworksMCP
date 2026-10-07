@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+    <!--
+        The AI Modeler: the MCP HTTP/RPC server inside Navisworks (upstream's waabe_navi_mcp_server).
+        Hosted by CEM_NavisworksAPI's CEM_RibbonUI through Core/MCPServiceConnection; standalone, the
+        CEM_NavisIAModeler_Ribbon project ships it in its own bundle (docs/decisions/0006). It deploys
+        nothing itself.
+    -->
+    <PropertyGroup>
+        <RootNamespace>CEM_NavisIAModeler</RootNamespace>
+        <AssemblyName>CEM_NavisIAModeler</AssemblyName>
+        <UseWPF>true</UseWPF>
+        <UseWindowsForms>true</UseWindowsForms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.CSharp" />
+        <Reference Include="System.Data.DataSetExtensions" />
+        <Reference Include="System.Net.Http" />
+        <Reference Include="System.Security" />
+        <Reference Include="System.Web" />
+        <Reference Include="System.Web.Extensions" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="mcp_manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\CEM_NavisIAModeler_Shared\CEM_NavisIAModeler_Shared.csproj" />
+    </ItemGroup>
+
+</Project>

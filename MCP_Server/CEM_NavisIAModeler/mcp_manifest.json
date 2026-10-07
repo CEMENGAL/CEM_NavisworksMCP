@@ -1,0 +1,32 @@
+{
+  "name": "CEM_NavisIAModeler",
+  "version": "1.0.0",
+  "framework": "net48",
+  "navisworks": "2027",
+  "rpc": {
+    "model": [
+      "get_model_overview",
+      "get_units_and_tolerances",
+      "get_property_distribution_by_category"
+    ],
+    "search": [
+      "get_element_count_by_category",
+      "list_properties_for_item",
+      "list_items_to_property"
+    ],
+    "selection": [
+      "clear_selection",
+      "get_current_selection_snapshot",
+      "apply_selection"
+    ],
+    "clash": [
+      "run_simple_clash"
+    ],
+    "visibility": [
+    ],
+    "export": [
+    ],
+    "system": [
+    ]
+  }
+}

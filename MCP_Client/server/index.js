@@ -14,7 +14,7 @@ import {
 class NavisworksMCPServer {
     constructor() {
         this.server = new Server(
-            { name: 'waabe-navisworks-mcp', version: '1.0.0' },
+            { name: 'cem-navis-aimodeler', version: '1.0.0' }, // Cemengal: was waabe-navisworks-mcp
             { capabilities: { tools: {} } }
         );
 
@@ -24,7 +24,7 @@ class NavisworksMCPServer {
 
 
     getNavisworksApiUrl() {
-        const port = process.env.NAVISWORKS_API_PORT || '1234';
+        const port = process.env.NAVISWORKS_API_PORT || '8765'; // Cemengal: the server's default too (was 1234)
         return `http://localhost:${port}`;
     }
 

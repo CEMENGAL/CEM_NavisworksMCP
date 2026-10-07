@@ -1,0 +1,19 @@
+<Project>
+    <!--
+        Resolves NavisworksInstallDir at build time when evaluation could not. Directory.Build.props
+        reads the registry with GetRegistryValueFromView, which works in Visual Studio and newer SDKs,
+        but the .NET 5 SDK's MSBuild (16.8, Core) returns empty for every registry function. Then this
+        target asks `reg query` instead. Navisworks need not be under Program Files (it is on D: on the
+        bootstrap machine). Deploy targets depend on it.
+    -->
+    <Target Name="ResolveNavisworksInstallDir" Condition="'$(NavisworksSeries)' != '' And !Exists('$(NavisworksInstallDir)')">
+        <Exec Command="reg query &quot;HKLM\SOFTWARE\Autodesk\Navisworks Manage\$(NavisworksSeries).0\Location&quot; /v Path /reg:64"
+              ConsoleToMSBuild="true" IgnoreExitCode="true" EchoOff="true"
+              StandardOutputImportance="low" StandardErrorImportance="low">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_NavisworksRegQuery" />
+        </Exec>
+        <PropertyGroup Condition="$(_NavisworksRegQuery.Contains('REG_SZ'))">
+            <NavisworksInstallDir>$([System.Text.RegularExpressions.Regex]::Replace('$(_NavisworksRegQuery)', '^.*REG_SZ\s+', '').Trim().TrimEnd('\'))</NavisworksInstallDir>
+        </PropertyGroup>
+    </Target>
+</Project>

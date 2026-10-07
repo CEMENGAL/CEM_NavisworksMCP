@@ -7,6 +7,13 @@ It was created with **Visual Studio 2022** and targets **.NET Framework 4.8**.
 
 ## Build & Deployment
 
+> **Cemengal fork (Navisworks Manage 2027):** the projects are SDK-style and build without a
+> Navisworks install: `dotnet build CEM_NavisworksMCP.sln -c "Debug N27"`. The projects were renamed
+> (`CEM_NavisIAModeler`, `CEM_NavisIAModeler_Shared`, `CEM_NavisIAModeler_Ribbon`). In a Cemengal checkout
+> CEM_NavisworksAPI's ribbon hosts the server; the standalone bundle (`CEM_NavisIAModeler.bundle`, with
+> `Contents\v24`) is deployed only without it, by an MSBuild target that replaced the post-build events
+> below. See `../docs/index.md`.
+
 - Each project defines a **Post-Build event**.  
 - After a successful build, the system automatically creates a **Navisworks bundle** in the Autodesk ApplicationPlugins directory of the current user:  
 

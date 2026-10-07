@@ -1,17 +1,16 @@
 {
   "dxt_version": "0.1",
-  "name": "waabe-navisworks-mcp",
+  "name": "cem-navis-aimodeler",
   "version": "1.0.0",
-  "description": "Navisworks Manage 2026 MCP Server for element queries and model analysis. ",
+  "description": "Navisworks Manage 2027 MCP Server for element queries and model analysis. ",
   "author": {
-    "name": "WAABE",
-    "email": "n.rube@waabe.com",
-    "url": "https://www.waabe.com"
+    "name": "Cemengal (fork of WAABE's proof of concept)",
+    "url": "https://github.com/CEMENGAL/CEM_NavisworksMCP"
   },
   "license": "MIT",
-  "homepage": "https://www.waabe.com",
-  "documentation": "https://github.com/kikki/MCP-Add-in-Autodesk_Navisworks_Manage_2026",
-  "support": "https://github.com/kikki/MCP-Add-in-Autodesk_Navisworks_Manage_2026",
+  "homepage": "https://github.com/CEMENGAL/CEM_NavisworksMCP",
+  "documentation": "https://github.com/CEMENGAL/CEM_NavisworksMCP",
+  "support": "https://github.com/CEMENGAL/CEM_NavisworksMCP",
   "icon": "icon.png",
 
   "server": {
@@ -30,8 +29,8 @@
     "api_port": {
       "type": "string",
       "title": "Navisworks API Port",
-      "description": "Port des Navisworks MCP Servers (Standard: 1234)",
-      "default": "1234",
+      "description": "Port des Navisworks MCP Servers (Standard: 8765)",
+      "default": "8765",
       "required": true
     }
   },
