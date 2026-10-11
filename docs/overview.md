@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP — overview"
 type: overview
-updated: 2026-10-07
+updated: 2026-10-11
 sources: [README.md, MCP_Server/CEM_NavisworksMCP.sln, MCP_Client/server/index.js, MCP_Client/manifest.json]
 related: [index.md, concepts/upstream-and-fork.md, concepts/rpc-contract.md, ../../../docs/repos/CEM_NavisworksMCP.md]
 tags: [overview, mcp, navisworks]
@@ -54,3 +54,5 @@ The ten tools: `get_model_overview`, `get_units_and_tolerances`,
 The Navisworks counterpart of [CEM_RevitMCP](../../CEM_RevitMCP/docs/index.md), next to the
 Navisworks add-ins in [CEM_NavisworksAPI](../../../CEM_NavisworksAPI/docs/index.md). It shares no code
 with either yet. Root node page: [CEM_NavisworksMCP](../../../docs/repos/CEM_NavisworksMCP.md).
+It makes no CEM_API request; should it need one, the call goes through CEM_CSharpExtended's `Api`
+(root [0023](../../../docs/decisions/0023-one-shared-request-layer.md), [CEM_API#74](sources/issues/CEM-EnriqueRuiz-CEM_API-74.md)).

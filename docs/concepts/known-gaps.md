@@ -1,7 +1,7 @@
 ---
 title: "Known gaps — what is missing, unverified or risky"
 type: concept
-updated: 2026-10-07
+updated: 2026-10-11
 sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/FallbackBackend.cs, MCP_Server/CEM_NavisIAModeler/Plugins/MCPServerRegistrar.cs]
 related: [../workflows/smoke-test.md, upstream-and-fork.md]
 tags: [gaps, security, drift]
@@ -20,6 +20,13 @@ Recorded at the fork (2026-10-07). Remove an item when it is fixed, and log it.
   hosts it, shows its state, and opens no dialog on success.
 - *The 2027 clash port failed* with `test not found after AddCopy`: `TestsData.Value` is a snapshot,
   read before the add. It is now read again after the add; see item 3 for why it is not yet re-run.
+
+**Checked on 2026-10-11, not a gap:** the C# request-layer review
+([CEM_API#74](../sources/issues/CEM-EnriqueRuiz-CEM_API-74.md)) found no CEM_API request here, no route
+string and no CEM_CSharpExtended reference. Every URL in the code is this repo's own MCP server on
+`127.0.0.1`/`localhost` or the GitHub project link. A future CEM_API call goes through CEM_CSharpExtended's
+`Api` (root [0023](../../../../docs/decisions/0023-one-shared-request-layer.md)); no guard test enforces that yet,
+here or in the other C# consumers.
 
 1. **Four tools not yet run live:** `get_property_distribution_by_category`,
    `list_properties_for_item`, `list_items_to_property`, `clear_selection`.

@@ -9,8 +9,7 @@ tags: [issue, wiki, qmd, process, cross-repo]
 
 # CEM-EnriqueRuiz/CEM_API#68
 
-**Issue:** https://github.com/CEM-EnriqueRuiz/CEM_API/issues/68 ("LLM wiki for every repo, with per-commit
-ingest") · open. It lives in CEM_API's tracker and covers every repo's wiki
+**Issue:** https://github.com/CEM-EnriqueRuiz/CEM_API/issues/68 · open. It lives in CEM_API's tracker and covers every repo's wiki
 ([feature page](../../../../../docs/features/CEM-EnriqueRuiz-CEM_API-68.md)). This repo's wiki, hooks and qmd
 settings came with the fork bootstrap, under [CEMENGAL/CEM_NavisworksAPI#1](CEMENGAL-CEM_NavisworksAPI-1.md);
 only the change below carries the #68 link.
