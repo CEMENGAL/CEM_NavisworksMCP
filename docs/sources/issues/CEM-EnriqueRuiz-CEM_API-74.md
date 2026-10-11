@@ -45,3 +45,7 @@ are generic, never shaped for one tool) and [0025](../../../../../docs/decisions
 - No guard test fails on a CEM_API route here, and none exists in any C# consumer yet (root 0023). There is
   nothing to guard here today; if this repo ever references CEM_CSharpExtended, it gets the guard the other
   consumers get then.
+
+## Skill update (2026-10-11)
+
+At the user's direct request, the dev skill's hard rules now carry the one-request-layer rule (root decisions 0021-0025), so an agent meets it before reading the wiki.

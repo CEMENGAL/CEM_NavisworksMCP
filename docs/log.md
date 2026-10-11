@@ -34,3 +34,6 @@ The user tested and supplied the umbrella issue. Added [sources/issues/CEMENGAL-
 
 ## [2026-10-11] ingest | CEM-EnriqueRuiz/CEM_API#74 the C# side of the request-layer rule
 Root decision 0023 now covers C#: every CEM_API call goes through CEM_CSharpExtended's `Api` (with 0019), never a route string or URL in an add-in, and a missing call is added to the library first. Added as hard rule 7 in the index's Start here, with a "Call CEM_API from this repo" row (0023, 0019, 0021, 0025, CEM_CSharpExtended's core `Api` page). The 2026-10-11 review found this repo compliant: no CEM_API request, its `localhost` URLs are its own MCP server; recorded in the new [CEM_API#74 source](sources/issues/CEM-EnriqueRuiz-CEM_API-74.md), the [overview](overview.md) and a "checked, not a gap" note in [known gaps](concepts/known-gaps.md). The [CEM_API#68 source](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md) no longer quotes an unverified issue title.
+
+## [2026-10-11] ingest | CEM-EnriqueRuiz/CEM_API#74 the request-layer rule in the cem-navismcp-dev skill
+At the user's request, the skill carries the line proposed on 2026-10-11: any CEM_API call through CEM_CSharpExtended's `Api` (root 0023).

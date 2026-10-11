@@ -30,6 +30,9 @@ Search with qmd when the index is not enough (`qmd query -c cem_navismcp "..."`)
   authentication yet, so never widen the binding or add CORS back
   ([0005](../../../docs/decisions/0005-no-cors-refuse-browser-origins.md)); `npm test` guards both.
 - Test code never ships: `MCP_Client/.dxtignore` excludes `server/tests/`.
+- Any CEM_API call goes through CEM_CSharpExtended's `Api`; never spell a CEM_API route or URL in this repo
+  (root [0023](../../../../../docs/decisions/0023-one-shared-request-layer.md)). Today the repo makes none: its
+  `localhost` URLs are its own MCP server.
 
 ## Verify
 
