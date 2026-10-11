@@ -1,7 +1,7 @@
 ---
 title: "Wiki log"
 type: log
-updated: 2026-10-07
+updated: 2026-10-11
 sources: []
 related:
   - index.md
@@ -28,3 +28,6 @@ At the user's request the fork got CEM_RevitMCP's treatment: projects and namesp
 
 ## [2026-10-08] ingest | CEMENGAL/CEM_NavisworksAPI#1 Create the repository and set up the menu
 The user tested and supplied the umbrella issue. Added [sources/issues/CEMENGAL-CEM_NavisworksAPI-1](sources/issues/CEMENGAL-CEM_NavisworksAPI-1.md), linking the decisions and the detailed record in [sources/commits/2026-10](sources/commits/2026-10.md); this commit carries the work under that link.
+
+## [2026-10-11] ingest | qmd MCP through the machine's shared server (root decision 0020)
+`.mcp.json`'s `qmd` entry no longer starts a stdio `qmd mcp` per session; it is `{ "type": "http", "url": "http://127.0.0.1:8181/mcp" }`, the machine's one shared server (root decision 0020: per-session servers loaded 2 to 3.5 GB of models each and exhausted RAM). The name stays `qmd`, so `enabledMcpjsonServers` is unchanged. The fork's bootstrap had copied the old entry and missed the other repos' 2026-10-08 switch. Recorded in the new [CEM_API#68 source](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md), [upstream and fork](concepts/upstream-and-fork.md) and the index.

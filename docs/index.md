@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP wiki — index"
 type: index
-updated: 2026-10-07
+updated: 2026-10-11
 sources: [README.md, MCP_Server/README.md, MCP_Client/README.md]
 related: [overview.md, log.md]
 tags: [index]
@@ -93,5 +93,6 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 ### Sources
 
 - [CEM_NavisworksAPI#1](sources/issues/CEMENGAL-CEM_NavisworksAPI-1.md): the umbrella issue this fork's work belongs to (open).
+- [CEM_API#68](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md): the wiki for every repo; here, qmd through the machine's shared server (open).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).
 - [commits 2026-10](sources/commits/2026-10.md): the Cemengal fork, the 2027 port, the rename and the hosting.

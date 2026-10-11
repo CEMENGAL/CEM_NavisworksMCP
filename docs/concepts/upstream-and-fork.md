@@ -1,7 +1,7 @@
 ---
 title: "Upstream and fork — what is theirs, what is ours"
 type: concept
-updated: 2026-10-07
+updated: 2026-10-11
 sources: [README.md, LICENSE, "git log upstream/main"]
 related: [../decisions/0004-minimal-divergence-from-upstream.md, ../sources/commits/2025-09.md, ../sources/commits/2026-10.md]
 tags: [fork, upstream]
@@ -35,6 +35,9 @@ tags: [fork, upstream]
   ([0005](../decisions/0005-no-cors-refuse-browser-origins.md)).
 - **Added:** `MCP_Client/server/tests/` and `npm test` ([0003](../decisions/0003-rpc-contract-tests.md)),
   `docs/`, `CLAUDE.md`, `AGENTS.md`, the `cem-navismcp-dev` agent and skill, hook and qmd settings.
+  Since 2026-10-11 `.mcp.json`'s `qmd` entry points to the machine's shared server, `http://127.0.0.1:8181/mcp`
+  (root decision [0020](../../../../docs/decisions/0020-one-shared-qmd-server-per-machine.md),
+  [CEM_API#68](../sources/issues/CEM-EnriqueRuiz-CEM_API-68.md)).
 
 Every code change carries a `Cemengal` comment or is in a Cemengal-only file
 ([0004](../decisions/0004-minimal-divergence-from-upstream.md)).
