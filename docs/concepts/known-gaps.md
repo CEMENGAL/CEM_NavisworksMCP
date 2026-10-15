@@ -23,7 +23,7 @@ Recorded at the fork (2026-10-07). Remove an item when it is fixed, and log it.
 
 **Checked on 2026-10-11, not a gap:** the C# request-layer review
 ([CEM_API#74](../sources/issues/CEM-EnriqueRuiz-CEM_API-74.md)) found no CEM_API request here, no route
-string and no CEM_CSharpExtended reference. Every URL in the code is this repo's own MCP server on
+string. (Since 2026-10-15 `CEM_NavisIAModeler_Shared` references CEM_CSharpExtended for `CemUserHome` only, [0007](../decisions/0007-per-user-home-no-writes-next-to-the-dll.md).) Every URL in the code is this repo's own MCP server on
 `127.0.0.1`/`localhost` or the GitHub project link. A future CEM_API call goes through CEM_CSharpExtended's
 `Api` (root [0023](../../../../docs/decisions/0023-one-shared-request-layer.md)); no guard test enforces that yet,
 here or in the other C# consumers.
@@ -54,3 +54,4 @@ here or in the other C# consumers.
    path does not use the registrar.
 9. **Manifest `base_url` repeats the port** (`http://127.0.0.1:8765:8765/`) in `GET /manifest`;
    upstream's `GetBaseUrl` appends the port to a host that already has it. The client does not use it.
+10. **The standalone bundle does not ship `CEM_CSharpExtended.dll`.** The `DeployNavisworksBundle` copy list in `CEM_NavisIAModeler_Ribbon.csproj` carries only the three DLLs, but the Shared project now needs CEM_CSharpExtended and its dependencies (SocketIO*, System.Text.Json, System.Memory...). The hosted bundle has them; a standalone install (no CEM_NavisworksAPI) fails to load `LogHelper`/`SettingsManager` until they are added.

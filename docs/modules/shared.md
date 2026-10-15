@@ -14,6 +14,6 @@ the standalone ribbon; CEM_RibbonUI references it too, with the host flag, so MS
 
 - `IWaabeService` + `ServiceRegistry`: the server registers its service here (key
   `CEM_NavisIAModeler`); `MCPServiceConnection` and the standalone ribbon find it there.
-- `LogHelper`: `LogEvent`, `LogInfo`, `LogDebug`, appending to `CEM_NavisIAModeler_log.md` in the bundle
-  folder the DLL was loaded from (`CEM_NavisworksAPI.bundle` when hosted).
+- `LogHelper`: `LogEvent`, `LogInfo`, `LogDebug`, appending to `CEM_NavisIAModeler_log.md` in the per-user home
+  (`CemUserHome.NavisworksFile`: `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle`; [0007](../decisions/0007-per-user-home-no-writes-next-to-the-dll.md)).
 - `WaabeRibbon`: upstream's ribbon constants (class name kept).

@@ -222,9 +222,6 @@ namespace CEM_NavisIAModeler.Services
                     var baseUrl = GetBaseUrl(req);
                     var doc = ManifestBuilder.Build(baseUrl);
 
-                     
-                    ManifestBuilder.TryWriteToDisk(doc, out _);
-
                     var json = _jss.Serialize(doc);
                     await WriteRawAsync(res, 200, "application/json; charset=utf-8", json).ConfigureAwait(false);
                     return;
@@ -235,19 +232,9 @@ namespace CEM_NavisIAModeler.Services
                 {
                     var baseUrl = GetBaseUrl(req);
                     var doc = ManifestBuilder.Build(baseUrl);
-                    ManifestBuilder.TryWriteToDisk(doc, out var fullPath);
 
-                     
-                    if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
-                    {
-                        var fileJson = File.ReadAllText(fullPath, Encoding.UTF8);
-                        await WriteRawAsync(res, 200, "application/json; charset=utf-8", fileJson).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        var json = _jss.Serialize(doc);
-                        await WriteRawAsync(res, 200, "application/json; charset=utf-8", json).ConfigureAwait(false);
-                    }
+                    var json = _jss.Serialize(doc);
+                    await WriteRawAsync(res, 200, "application/json; charset=utf-8", json).ConfigureAwait(false);
                     return;
                 }
 

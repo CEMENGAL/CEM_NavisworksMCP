@@ -22,7 +22,7 @@ on every build, on any machine, and hard-coded the 2026 series (`v23`). Naviswor
 - `waabe_navi_mcp_server.csproj` (it references the other two) has one `DeployNavisworksBundle` target
   after `Build`. It writes:
   - `PackageContents.xml` at the bundle root;
-  - the three DLLs (and PDBs) plus `mcp_manifest.json` in `Contents\v$(NavisworksSeries)\` (`v24`);
+  - the three DLLs (and PDBs) in `Contents\v$(NavisworksSeries)\` (`v24`);
   - `Ribbon\Buttons.xml` and `Ribbon\Icons\*.png`, where the ribbon plugin looks for them;
   - an empty `Settings\` folder, for the port settings.
 - It runs by default only where Navisworks Manage 2027 is installed. The install path comes from
@@ -31,8 +31,7 @@ on every build, on any machine, and hard-coded the 2026 series (`v23`). Naviswor
   for registry functions (the same files as CEM_NavisworksAPI). Navisworks need not be on `C:`.
   `-p:DeployNavisworksBundle=true` forces it, `=false` skips it, and a DLL locked by a running
   Navisworks turns the copy into a warning.
-- `PackageContents.xml` says `Nw24`/`Contents\v24`, and `ManifestBuilder.GetDefaultContentDirectory`
-  says `v24`. The two `ComponentEntry`s for DLLs the solution does not build
+- `PackageContents.xml` says `Nw24`/`Contents\v24`, (2026-10-15: `ManifestBuilder` no longer writes a manifest, so no path is left to say `v24`; [0007](0007-per-user-home-no-writes-next-to-the-dll.md)). The two `ComponentEntry`s for DLLs the solution does not build
   (`waabe_navi_chatfenster`, `waabe_navi_mcpserver`, leftovers of upstream experiments) were removed.
 
 **Rejected:** keeping the post-build events with `v24`. They are `cmd`-only, run without Navisworks,

@@ -13,11 +13,10 @@ namespace CEM_NavisIAModeler.Infrastructure
     /// <summary>
     /// Builds an MCP manifest at runtime from the currently registered RPC routes.
     /// - Used by the MCP server to expose available routes and capabilities.
-    /// - Can also write the manifest to disk as mcp_manifest.json inside the bundle directory.
+    /// - Never written to disk: the add-in writes nothing next to its DLL (docs/decisions/0007).
     ///
     /// Callers:
     /// - MCPServer (HTTP GET /manifest and /mcp_manifest.json)
-    /// - MCPServerRegistrar (optionally writes manifest at startup)
     /// </summary>
     public static class ManifestBuilder
     {
@@ -64,46 +63,6 @@ namespace CEM_NavisIAModeler.Infrastructure
             };
 
             return doc;
-        }
-
-        /// <summary>
-        /// Writes the manifest document to disk as "mcp_manifest.json".
-        /// - Target path: ApplicationPlugins\CEM_NavisIAModeler.bundle\Contents\v24 (Navisworks 2027; Cemengal port).
-        /// - Returns true on success and provides the full file path.
-        /// </summary>
-        /// <param name="doc">ManifestDoc to write.</param>
-        /// <param name="fullPath">Output parameter with the written file path.</param>
-        /// <returns>True if file was written successfully, false otherwise.</returns>
-        public static bool TryWriteToDisk(ManifestDoc doc, out string fullPath)
-        {
-            try
-            {
-                var contentDir = GetDefaultContentDirectory();
-                Directory.CreateDirectory(contentDir);
-                fullPath = Path.Combine(contentDir, "mcp_manifest.json");
-                var json = _ser.Serialize(doc);
-                File.WriteAllText(fullPath, json);
-                LogHelper.LogEvent($"[Manifest] mcp_manifest.json written: {fullPath}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogEvent($"[Manifest] Write failed: {ex.Message}");
-                fullPath = null;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Gets the default content directory in the ApplicationPlugins bundle.
-        /// - Default path points to CEM_NavisIAModeler.bundle\Contents\v24 (Navisworks 2027; Cemengal port).
-        /// - Note: Update the version (v24 = Navisworks 2027) to match the target Navisworks version if needed.
-        /// </summary>
-        public static string GetDefaultContentDirectory()
-        {
-            // Cemengal: the folder of this DLL, so the manifest lands in whichever bundle loaded it
-            // (CEM_NavisworksAPI.bundle when CEM_RibbonUI hosts it, CEM_NavisIAModeler.bundle standalone).
-            return Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
         }
 
         // --- Private Helpers ---

@@ -23,5 +23,5 @@ replaces it. It is the fork's entry point when the repo is used alone.
     **modal** message box. That box blocks the UI until dismissed; the hosted path has none.
 - `CEM_NavisIAModeler_Ribbon.csproj` references the server only so the standalone bundle carries it, and
   owns the standalone deploy: `CEM_NavisIAModeler.bundle` with `PackageContents.xml` (`Nw24`), the
-  three DLLs, `mcp_manifest.json`, `Ribbon\` and `Settings\`, only when `CemStandaloneDeploy` is true
+  three DLLs (plus `CEM_CSharpExtended.dll` and its dependencies), `Ribbon\` and `Settings\`, only when `CemStandaloneDeploy` is true
   ([0002](../decisions/0002-msbuild-bundle-deploy.md), [0006](../decisions/0006-renamed-and-hosted-by-cem-ribbonui.md)).

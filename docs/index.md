@@ -95,10 +95,12 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [0004](decisions/0004-minimal-divergence-from-upstream.md): minimal, marked divergence from upstream (current).
 - [0005](decisions/0005-no-cors-refuse-browser-origins.md): no CORS, refuse browser origins (current).
 - [0006](decisions/0006-renamed-and-hosted-by-cem-ribbonui.md): renamed CEM_NavisIAModeler, hosted by the Cemengal ribbon, port 8765 (current).
+- [0007](decisions/0007-per-user-home-no-writes-next-to-the-dll.md): no writes next to the DLL; settings and log in `CemUserHome` (current).
 
 ### Sources
 
 - [CEM_NavisworksAPI#1](sources/issues/CEMENGAL-CEM_NavisworksAPI-1.md): the umbrella issue this fork's work belongs to (open).
+- [CEM_NavisworksAPI#3](sources/issues/CEMENGAL-CEM_NavisworksAPI-3.md): the IFC Comparator work; this repo's part is 0007, no writes next to the DLL.
 - [CEM_API#68](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md): the wiki for every repo; here, qmd through the machine's shared server (open).
 - [CEM_API#74](sources/issues/CEM-EnriqueRuiz-CEM_API-74.md): one shared request layer per language; here, the C# rule and the 2026-10-11 review (open).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).

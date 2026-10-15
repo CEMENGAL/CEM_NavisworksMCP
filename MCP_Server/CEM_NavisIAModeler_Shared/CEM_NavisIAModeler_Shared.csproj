@@ -11,4 +11,9 @@
         <Reference Include="System.Net.Http" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- Cemengal: the per-user home helper (sibling repo CEM_CSharpExtended), from the project, never this solution. -->
+        <ProjectReference Include="..\..\..\..\CEM_CSharpExtended\CEM_CSharpExtended\CEM_CSharpExtended.csproj" />
+    </ItemGroup>
+
 </Project>

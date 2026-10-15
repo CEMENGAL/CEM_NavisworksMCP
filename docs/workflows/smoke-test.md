@@ -14,7 +14,7 @@ The bar for anything that runs inside Navisworks.
 1. Close Navisworks Manage 2027, then build **CEM_NavisworksAPI** (Cemengal checkout) or this solution
    (standalone) ([build and deploy](build-and-deploy.md)); check the output names the bundle folder.
 2. Start Navisworks and open a model (`../../CEM_Test/CEM_NavisworksAPI/Prueba.nwf`, three IFC models).
-   The **Cemengal** tab should show **General → Hello World** and **AI → AI Modeler**, and there should be
+   The **Cemengal** tab should show three buttons (the AI Modeler under **AI**, then the connection and IFC Comparator ones; Hello World was deleted on 2026-10-15), and there should be
    no other MCP tab. If not, read `CEM_NavisIAModeler_log.md` in the bundle folder.
 3. Press **AI Modeler**: no dialog; the button stays pressed and reads `AI Modeler (8765)`.
 4. From a terminal:
@@ -52,7 +52,7 @@ Same machine and document.
 
 | Step | Result |
 |---|---|
-| Ribbon | only the **Cemengal** tab, with **Hello World** and **AI Modeler**; no waabe tab |
+| Ribbon | only the **Cemengal** tab, with **Hello World** and **AI Modeler**; no waabe tab (Hello World no longer exists since 2026-10-15) |
 | Press **AI Modeler** | no dialog; label `AI Modeler (8765)`; `/health` OK; settings and log in `CEM_NavisworksAPI.bundle` |
 | Client with **no port setting** | connected on 8765; reports `cem-navis-aimodeler` |
 | `get_units_and_tolerances`, `get_model_overview` | as before |

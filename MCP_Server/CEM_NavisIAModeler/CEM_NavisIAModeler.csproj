@@ -23,10 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="mcp_manifest.json" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\CEM_NavisIAModeler_Shared\CEM_NavisIAModeler_Shared.csproj" />
     </ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
+using CEM_CSharpExtended.Hosting;
 using CEM_NavisIAModeler_Shared;
 
 namespace CEM_NavisIAModeler.Services
@@ -15,29 +16,14 @@ namespace CEM_NavisIAModeler.Services
         private static readonly string SettingsPath = GetSettingsPath();
 
         /// <summary>
-        /// Resolves the path to the settings XML file.
-        /// Creates the directory and a default file if they do not exist.
+        /// Resolves the path to the settings XML file in the per-user home (CemUserHome), creates a default
+        /// file if missing. Cemengal: never next to the DLL, the menu may live in a shared ACC folder.
         /// </summary>
         private static string GetSettingsPath()
         {
             try
             {
-                 
-                var dllPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                var dllDir = Path.GetDirectoryName(dllPath);  
-                var contentsDir = Path.GetDirectoryName(dllDir);  
-                var bundleDir = Path.GetDirectoryName(contentsDir);  
-                var settingsDir = Path.Combine(bundleDir, "Settings");
-                var settingsFile = Path.Combine(settingsDir, "CEM_NavisIAModeler_settings.xml");
-
-                 
-                if (!Directory.Exists(settingsDir))
-                {
-                    Directory.CreateDirectory(settingsDir);
-                    LogHelper.LogEvent($"Settings-Verzeichnis erstellt: {settingsDir}");
-                }
-
-                 
+                var settingsFile = CemUserHome.NavisworksSettingsFile("CEM_NavisIAModeler_settings.xml");
                 if (!File.Exists(settingsFile))
                 {
                     CreateDefaultSettings(settingsFile);
@@ -48,7 +34,6 @@ namespace CEM_NavisIAModeler.Services
             catch (Exception ex)
             {
                 LogHelper.LogEvent($"Fehler beim Settings-Pfad: {ex.Message}");
-                 
                 return Path.Combine(Path.GetTempPath(), "CEM_NavisIAModeler_settings.xml");
             }
         }

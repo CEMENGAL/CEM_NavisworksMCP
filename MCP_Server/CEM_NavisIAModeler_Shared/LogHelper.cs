@@ -1,4 +1,5 @@
 ﻿using Autodesk.Navisworks.Api;
+using CEM_CSharpExtended.Hosting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,49 +20,20 @@ namespace CEM_NavisIAModeler_Shared
         private static readonly string LogPath = GetBundleLogPath();
 
         /// <summary>
-        /// Resolves the bundle-specific path where the log file should be written.
-        /// Falls back to AppData or Documents if the bundle path cannot be determined.
+        /// Resolves the log path in the per-user home (CemUserHome). Cemengal: never next to the DLL,
+        /// the menu may live in a shared ACC folder.
         /// </summary>
         private static string GetBundleLogPath()
         {
             try
             {
-                 
-                var dllPath = Assembly.GetExecutingAssembly().Location;
-                var dllDir = Path.GetDirectoryName(dllPath);  
-                var contentsDir = Path.GetDirectoryName(dllDir);  
-                var bundleDir = Path.GetDirectoryName(contentsDir);  
-
-                if (bundleDir != null && bundleDir.EndsWith(".bundle"))
-                {
-                    var logPath = Path.Combine(bundleDir, "CEM_NavisIAModeler_log.md");
-                    return logPath;
-                }
+                return CemUserHome.NavisworksFile("CEM_NavisIAModeler_log.md");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Fehler bei Bundle-Pfad-Ermittlung: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Log path failed: {ex.Message}");
+                return Path.Combine(Path.GetTempPath(), "CEM_NavisIAModeler_log.md");
             }
-
-             
-            try
-            {
-                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                var bundlePath = Path.Combine(appData, "Autodesk", "ApplicationPlugins", "CEM_NavisIAModeler.bundle");
-
-                if (Directory.Exists(bundlePath))
-                {
-                    return Path.Combine(bundlePath, "CEM_NavisIAModeler_log.md");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Fehler bei APPDATA-Fallback: {ex.Message}");
-            }
-
-             
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            return Path.Combine(documentsPath, "CEM_NavisIAModeler_log.md");
         }
 
         /// <summary>
@@ -297,20 +269,8 @@ namespace CEM_NavisIAModeler_Shared
         {
             try
             {
-                var dllPath = Assembly.GetExecutingAssembly().Location;
-                LogDebug($"DLL Pfad: {dllPath}");
-
-                var dllDir = Path.GetDirectoryName(dllPath);
-                LogDebug($"DLL Dir: {dllDir}");
-
-                var contentsDir = Path.GetDirectoryName(dllDir);
-                LogDebug($"Contents Dir: {contentsDir}");
-
-                var bundleDir = Path.GetDirectoryName(contentsDir);
-                LogDebug($"Bundle Dir: {bundleDir}");
-
+                LogDebug($"Per-user home: {CemUserHome.NavisworksFolder}");
                 LogDebug($"Finaler Log-Pfad: {LogPath}");
-                LogDebug($"Bundle-Dir existiert: {Directory.Exists(bundleDir)}");
             }
             catch (Exception ex)
             {

@@ -37,3 +37,9 @@ Root decision 0023 now covers C#: every CEM_API call goes through CEM_CSharpExte
 
 ## [2026-10-11] ingest | CEM-EnriqueRuiz/CEM_API#74 the request-layer rule in the cem-navismcp-dev skill
 At the user's request, the skill carries the line proposed on 2026-10-11: any CEM_API call through CEM_CSharpExtended's `Api` (root 0023).
+
+## [2026-10-15] ingest | The AI Modeler writes nothing next to its DLL
+ACC will host the menu, so [0007](decisions/0007-per-user-home-no-writes-next-to-the-dll.md): the `mcp_manifest.json` disk write is deleted (nothing read it), settings and log go through CEM_CSharpExtended's `CemUserHome`, covered by `no-dll-adjacent-writes.test.mjs`.
+
+## [2026-10-15] ingest | CEMENGAL/CEM_NavisworksAPI#3 the IFC Comparator work, this repo's part
+New [issue source](sources/issues/CEMENGAL-CEM_NavisworksAPI-3.md) with the decisions and rejected alternatives for 0007. Drift fixed: [0002](decisions/0002-msbuild-bundle-deploy.md) no longer lists `mcp_manifest.json` as shipped or `GetDefaultContentDirectory`, [shared](modules/shared.md) names `CemUserHome` for the log, the [smoke test](workflows/smoke-test.md) no longer expects Hello World (deleted 2026-10-15), and [known gaps](concepts/known-gaps.md) item 10 records that the standalone bundle does not ship `CEM_CSharpExtended.dll`. Index lists the source.
