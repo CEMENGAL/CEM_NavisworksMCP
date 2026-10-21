@@ -75,6 +75,26 @@
     {
       "name": "get_units_and_tolerances",
       "description": "Length/area/volume units + tolerances."
+    },
+    {
+      "name": "get_server_status",
+      "description": "Whether the AI Modeler is busy, with which job, and whether Navisworks answers. Answers at once."
+    },
+    {
+      "name": "get_job_status",
+      "description": "Waits for a job that is still running and returns its result. Input: job_id."
+    },
+    {
+      "name": "cancel_job",
+      "description": "Stops a running job. Input: job_id."
+    },
+    {
+      "name": "send_code_to_navisworks",
+      "description": "Compiles and runs C# in Navisworks for what no other tool does. Input: code (the body of Execute(doc, parameters, ct)), parameters?."
+    },
+    {
+      "name": "take_screenshot",
+      "description": "An image of the 3D view (mode view) or of the whole Navisworks window (mode window). Input: mode?, max_size?."
     }
 
 

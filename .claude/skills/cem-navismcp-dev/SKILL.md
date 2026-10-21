@@ -26,13 +26,21 @@ Search with qmd when the index is not enough (`qmd query -c cem_navismcp "..."`)
   (`CEM_NavisIAModeler.bundle`, from `CEM_NavisIAModeler_Ribbon`) deploys only without that sibling. Both halves default to
   port 8765 ([0006](../../../docs/decisions/0006-renamed-and-hosted-by-cem-ribbonui.md)). Keep `MCPServiceConnection`'s
   API stable: CEM_RibbonUI calls it.
-- The server listens on loopback only, sends no CORS headers and refuses requests with an `Origin` header; it has no
-  authentication yet, so never widen the binding or add CORS back
-  ([0005](../../../docs/decisions/0005-no-cors-refuse-browser-origins.md)); `npm test` guards both.
+- The server listens on loopback only, sends no CORS headers, refuses requests with an `Origin` header, and answers
+  nothing but `/health` without the per-start access token; never widen the binding, add CORS back or open a route
+  without the token ([0005](../../../docs/decisions/0005-no-cors-refuse-browser-origins.md),
+  [0009](../../../docs/decisions/0009-local-access-token.md)); `npm test` guards all three.
+- `send_code_to_navisworks` compiles on the job's thread and runs on the UI thread; scripts are never logged or
+  written; Roslyn loads only after `DependencyResolver.Install()` ([0010](../../../docs/decisions/0010-send-code-and-screenshot.md)).
 - Test code never ships: `MCP_Client/.dxtignore` excludes `server/tests/`.
 - Any CEM_API call goes through CEM_CSharpExtended's `Api`; never spell a CEM_API route or URL in this repo
   (root [0023](../../../../../docs/decisions/0023-one-shared-request-layer.md)). Today the repo makes none: its
   `localhost` URLs are its own MCP server.
+- One request at a time, as a job (`RpcJobs`): another request is refused with `NVX_BUSY`, a long one answers
+  with its job id. Controllers pass the job's token (`RpcJobs.CurrentToken`), never a fixed timeout; every
+  loop over model items does `if (slice.Step()) await slice.PauseAsync();` (`UiSlice`) so Navisworks stays
+  responsive and `cancel_job` works; a UI-thread failure is never re-run off it
+  ([0008](../../../docs/decisions/0008-one-job-at-a-time.md)); `npm test` guards this.
 
 ## Verify
 

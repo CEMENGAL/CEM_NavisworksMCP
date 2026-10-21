@@ -36,6 +36,11 @@ namespace CEM_NavisIAModeler.Contracts
         public bool IgnoreCase { get; set; }
         public int count { get; set; }
         public List<PropertyItemDto> Items { get; set; }
+
+        // Cemengal: the result is capped at MaxResults (default 200); truncated says more items
+        // matched, and message says what was read (docs/decisions/0008).
+        public bool truncated { get; set; }
+        public string message { get; set; } = "";
     }
 
     /// <summary>

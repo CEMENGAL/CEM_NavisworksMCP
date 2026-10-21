@@ -34,7 +34,7 @@ namespace CEM_NavisIAModeler.Controllers
             return Wrap(() =>
             {
                 var q = _jss.ConvertToType<CategoryQuery>(req.@params);
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.GetCountByCategoryAsync(q, cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<ElementCountDto>.Success(dto);
             });
@@ -52,7 +52,7 @@ namespace CEM_NavisIAModeler.Controllers
             return Wrap(() =>
             {
                 var args = _jss.ConvertToType<ListItemsToPropertyArgs>(req.@params);
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.ListItemsToPropertyAsync(args, cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<PropertyItemListDto>.Success(dto);
             });
@@ -70,7 +70,7 @@ namespace CEM_NavisIAModeler.Controllers
             return Wrap(() =>
             {
                 var p = _jss.ConvertToType<ItemRef>(req.@params);
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.GetItemPropertiesAsync(p.item_id, cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<ItemPropertiesDto>.Success(dto);
             });

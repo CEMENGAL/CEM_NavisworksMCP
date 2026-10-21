@@ -1,9 +1,9 @@
 ---
 title: "The RPC contract — method names shared by client, server and manifest"
 type: concept
-updated: 2026-10-07
-sources: [MCP_Client/server/index.js, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Server/CEM_NavisIAModeler/mcp_manifest.json, MCP_Client/server/tests/rpc-contract.test.mjs]
-related: [../decisions/0003-rpc-contract-tests.md, ../workflows/add-a-tool.md, ../modules/rpc-server.md, ../modules/node-client.md]
+updated: 2026-10-21
+sources: [MCP_Client/server/index.js, MCP_Client/server/navis-rpc.js, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Server/CEM_NavisIAModeler/mcp_manifest.json, MCP_Client/server/tests/rpc-contract.test.mjs]
+related: [../decisions/0003-rpc-contract-tests.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../workflows/add-a-tool.md, ../modules/rpc-server.md, ../modules/node-client.md]
 tags: [contract, rpc, tests]
 ---
 
@@ -12,12 +12,24 @@ tags: [contract, rpc, tests]
 The two halves run in different processes and meet only at `POST /rpc` with
 `{ "id": "...", "method": "<name>", "params": { ... } }`, answered by
 `{ "ok": true, "data": ..., "meta": {...} }` or `{ "ok": false, "error": { "code", "msg" } }`.
+
+Since [0008](../decisions/0008-one-job-at-a-time.md) every request runs as a job, one at a time, so
+two `ok: false` replies carry a job in `data` (`job_id`, `method`, `state`, `elapsed_ms`, `phase`,
+`items_visited`): `NVX_BUSY` (another job is running; nothing was started) and `NVX_JOB_RUNNING`
+(still running after 20 s; follow it with `get_job_status`, whose `result` is the request's own reply
+once it ends). A cancelled job ends `NVX_CANCELED`. `get_server_status`, `get_job_status` and
+`cancel_job` run outside the rule (`RpcJobs.Immediate`).
+
+Every request also carries `Authorization: Bearer <token>`, the token the AI Modeler writes to the user's
+settings folder at each start; without it the reply is HTTP 401 `NVX_UNAUTHORIZED`
+([0009](../decisions/0009-local-access-token.md)).
+
 A method name is spelled in four places, and they must agree byte for byte:
 
 | Where | Form |
 |---|---|
 | `MCP_Client/server/index.js`, tool list | `{ name: 'get_model_overview', ... }`: the MCP tool name equals the RPC method name |
-| `MCP_Client/server/index.js`, handler | `this.rpc('get_model_overview', …)` or `this.t_simple('get_model_overview')` |
+| `MCP_Client/server/index.js`, handler | `this.rpc('get_model_overview', …)` or `this.t_simple('get_model_overview')`; in `navis-rpc.js`, `postRpc(baseUrl, 'get_job_status', …)` |
 | `MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs` | `routes["get_model_overview"] = wrap(model.GetModelOverview);` (commented-out lines do not count) |
 | `MCP_Server/CEM_NavisIAModeler/mcp_manifest.json` | the method listed under its group in `"rpc"` |
 

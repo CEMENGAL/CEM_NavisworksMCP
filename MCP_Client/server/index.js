@@ -8,6 +8,7 @@ import {
     ListToolsRequestSchema,
     McpError,
 } from '@modelcontextprotocol/sdk/types.js';
+import { callRpc, awaitJob, JobPending, pendingText } from './navis-rpc.js'; // Cemengal: docs/decisions/0008
 
 
 
@@ -29,24 +30,11 @@ class NavisworksMCPServer {
     }
 
 
+    // Cemengal: through navis-rpc.js, which times the request out, follows a long one as a job, and
+    // ends within the agent host's request timeout (docs/decisions/0008). Upstream's fetch had no
+    // timeout and waited as long as Navisworks did.
     async rpc(method, params = {}) {
-        const body = { id: String(Date.now()), method, params };
-        const resp = await fetch(`${this.navisworksApiUrl}/rpc`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-        const data = await resp.json();
-        if (!data || typeof data.ok !== 'boolean') {
-            throw new Error('Ungültige RPC-Antwort (kein ok-Feld).');
-        }
-        if (!data.ok) {
-            const code = data?.error?.code ?? 'UNKNOWN';
-            const msg = data?.error?.msg ?? 'Unbekannter Fehler';
-            throw new McpError(ErrorCode.InternalError, `RPC-Fehler ${code}: ${msg}`);
-        }
-        return data.data;
+        return callRpc(this.navisworksApiUrl, method, params);
     }
 
 
@@ -94,7 +82,8 @@ class NavisworksMCPServer {
 
                     {
                         name: 'get_property_distribution_by_category',
-                        description: 'Overview of all models with property categories and counts.',
+                        // Cemengal: the cost, so the agent can choose (docs/decisions/0008)
+                        description: 'Overview of all models with property categories and counts. Reads every property of every item: on a large federated model it runs for minutes, as a job (see get_job_status).',
                         inputSchema: { type: 'object', properties: {} },
                         output_schema: {
                             type: 'object',
@@ -152,7 +141,8 @@ class NavisworksMCPServer {
 
                     {
                         name: 'list_items_to_property',
-                        description: 'Lists items by category/property; optional model and value filters (substring, >=, <=, regex). modelFilter and scope accept IDs or model names; multiple tokens via , ; \\n.',
+                        // Cemengal: scope is honoured and results are capped (docs/decisions/0008)
+                        description: 'Lists items by category/property; optional model and value filters (substring, >=, <=, regex). modelFilter and scope accept IDs or model names; multiple tokens via , ; \\n. Only the scope\'s models are read: on a large model, give a scope. Returns at most maxResults items (default 200); truncated=true means there were more.',
                         inputSchema: {
                             type: 'object',
                             properties: {
@@ -167,7 +157,7 @@ class NavisworksMCPServer {
                                 },
                                 valueFilter: { type: 'string' },
                                 ignoreCase: { type: 'boolean', default: true },
-                                maxResults: { type: 'number' }
+                                maxResults: { type: 'number', description: 'Default 200' }
                             },
                             required: ['category', 'property']
                         }
@@ -191,7 +181,8 @@ class NavisworksMCPServer {
                     },
                     {
                         name: 'run_simple_clash',
-                        description: 'Runs a simple hard clash between two scopes. Input: scopeA, scopeB, tolerance_m?, test_name?',
+                        // Cemengal: what a scope means now, and that a long run is a job (docs/decisions/0008)
+                        description: 'Runs a simple hard clash between two scopes. Input: scopeA, scopeB, tolerance_m?, test_name? A scope is model canonical_ids (from get_model_overview), model file names or item ids; a model scope tests everything in the model. A long clash returns a job_id to follow with get_job_status.',
                         inputSchema: {
                             type: 'object',
                             properties: {
@@ -203,6 +194,70 @@ class NavisworksMCPServer {
                         }
                     },
                     { name: 'get_units_and_tolerances', description: 'Length/area/volume units + tolerances.', inputSchema: { type: 'object', properties: {} } },
+
+                    // Cemengal: the job tools (docs/decisions/0008). Navisworks runs one request at a
+                    // time; these three answer at once, even while a job runs.
+                    {
+                        name: 'get_server_status',
+                        description: 'Whether the AI Modeler is busy, with which job and for how long; whether Navisworks itself answers (ui_thread_responsive); the open document; the recent jobs. Answers at once, even while a job runs. Use it before assuming Navisworks has frozen.',
+                        inputSchema: { type: 'object', properties: {} }
+                    },
+                    {
+                        name: 'get_job_status',
+                        description: 'Waits up to ~45 s for a job (named in a reply that said "still running") and returns its result when it ends, or its progress. Call it again while it is still running.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: { job_id: { type: 'string' } },
+                            required: ['job_id']
+                        }
+                    },
+                    {
+                        name: 'cancel_job',
+                        description: 'Stops a running job. A scan stops within a second; a clash test Navisworks is already computing stops when that test ends.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: { job_id: { type: 'string' } },
+                            required: ['job_id']
+                        }
+                    },
+
+                    // Cemengal: the escape hatch and the eyes (docs/decisions/0010), as CEM_RevitMCP's
+                    // send_code_to_revit and take_screenshot.
+                    {
+                        name: 'send_code_to_navisworks',
+                        description: 'Compiles and runs C# inside Navisworks, for what no other tool does. `code` is the body of '
+                            + '`static object Execute(Document doc, string[] parameters, CancellationToken ct)`: doc is the active '
+                            + 'Autodesk.Navisworks.Api.Document; in scope are System, System.Collections.Generic, System.Linq, System.Text, '
+                            + 'System.Threading, Autodesk.Navisworks.Api, .Clash and .DocumentParts, plus the aliases ComApi '
+                            + '(Autodesk.Navisworks.Api.Interop.ComApi) and ComApiBridge; using directives at the top of the code are '
+                            + 'allowed. Statements only: local functions are fine, class declarations are not. '
+                            + 'Return a value to get it back (numbers, strings, '
+                            + 'lists, dictionaries, anonymous objects; Navisworks objects come back as text); Console.WriteLine output is '
+                            + 'returned too. It runs on Navisworks\' UI thread and cannot pause: keep it short, scope loops to the models '
+                            + 'you need, and check ct.IsCancellationRequested in long ones. Compile errors give line numbers in your code. '
+                            + 'Prefer a dedicated tool when one exists.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                code: { type: 'string', description: 'C# statements: the body of Execute' },
+                                parameters: { type: 'array', items: { type: 'string' }, description: 'Passed to the code as parameters' }
+                            },
+                            required: ['code']
+                        }
+                    },
+                    {
+                        name: 'take_screenshot',
+                        description: 'An image of Navisworks, to see the result of an action. mode "view" (default) renders the 3D view '
+                            + 'as it is now, without the user interface; "window" captures the whole Navisworks window, panels and '
+                            + 'dialogs included. max_size: the longest side in pixels (default 1600).',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                mode: { type: 'string', enum: ['view', 'window'], default: 'view' },
+                                max_size: { type: 'number', default: 1600 }
+                            }
+                        }
+                    },
                 ],
             };
         });
@@ -271,10 +326,31 @@ class NavisworksMCPServer {
                         return await this.t_run_simple_clash(scopeAraw, scopeBraw, tolerance_m, test_name);
                     };
 
+                    // Cemengal: the job tools (docs/decisions/0008)
+                    case 'get_server_status': return await this.t_simple('get_server_status');
+                    case 'get_job_status': return await this.t_job_status(this.requireJobId(args));
+                    case 'cancel_job': return await this.t_cancel_job(this.requireJobId(args));
+
+                    // Cemengal: docs/decisions/0010
+                    case 'send_code_to_navisworks': {
+                        const code = typeof args?.code === 'string' ? args.code : '';
+                        if (!code.trim()) throw new McpError(ErrorCode.InvalidParams, 'code is missing or empty.');
+                        const parameters = Array.isArray(args?.parameters) ? args.parameters.map(p => String(p ?? '')) : [];
+                        return await this.t_send_code(code, parameters);
+                    }
+                    case 'take_screenshot': {
+                        const mode = args?.mode === 'window' ? 'window' : 'view';
+                        const max_size = (typeof args?.max_size === 'number' && isFinite(args.max_size)) ? args.max_size : 1600;
+                        return await this.t_screenshot(mode, max_size);
+                    }
+
                     default:
                         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
                 }
             } catch (error) {
+                // Cemengal: a request still running in Navisworks is an answer, not an error: the agent
+                // gets the job id to wait on (docs/decisions/0008).
+                if (error instanceof JobPending) return { content: [{ type: 'text', text: pendingText(error.job) }] };
                 if (error instanceof McpError) throw error;
                 throw new McpError(ErrorCode.InternalError, `Error occurred while executing tool: ${error.message}`);
             }
@@ -422,6 +498,46 @@ class NavisworksMCPServer {
         });
 
         return { content: [{ type: 'text', text: '```json\n' + JSON.stringify(dto, null, 2) + '\n```' }] };
+    }
+
+    // Cemengal: the job tools (docs/decisions/0008).
+    requireJobId(args) {
+        const id = typeof args?.job_id === 'string' ? args.job_id.trim() : '';
+        if (!id) throw new McpError(ErrorCode.InvalidParams, 'job_id is missing or empty.');
+        return id;
+    }
+
+    async t_job_status(job_id) {
+        const { status, data } = await awaitJob(this.navisworksApiUrl, job_id);
+        const secs = Math.round((status.elapsed_ms ?? 0) / 1000);
+        const head = `Job ${status.job_id} (${status.method}) finished after ${secs} s.`;
+        return { content: [{ type: 'text', text: head + '\n```json\n' + JSON.stringify(data, null, 2) + '\n```' }] };
+    }
+
+    async t_cancel_job(job_id) {
+        const status = await this.rpc('cancel_job', { job_id });
+        return { content: [{ type: 'text', text: '```json\n' + JSON.stringify(status, null, 2) + '\n```' }] };
+    }
+
+    // Cemengal: docs/decisions/0010.
+    async t_send_code(code, parameters) {
+        const dto = await this.rpc('send_code_to_navisworks', { code, parameters });
+        let text = `Ran in ${dto?.run_ms ?? '?'} ms (compiled in ${dto?.compile_ms ?? '?'} ms). Result (${dto?.result_type || 'null'}):\n`
+            + '```json\n' + (dto?.result_json ?? 'null') + '\n```';
+        const output = (dto?.output ?? '').replace(/\s+$/, '');
+        if (output) text += '\nConsole output:\n```\n' + output + '\n```';
+        if (dto?.warnings?.length) text += '\nCompiler warnings:\n' + dto.warnings.join('\n');
+        return { content: [{ type: 'text', text }] };
+    }
+
+    async t_screenshot(mode, max_size) {
+        const dto = await this.rpc('take_screenshot', { mode, max_size });
+        return {
+            content: [
+                { type: 'image', data: dto.png_base64, mimeType: 'image/png' },
+                { type: 'text', text: `Navisworks ${dto.mode}, ${dto.width} x ${dto.height} px${dto.document_title ? `, ${dto.document_title}` : ''}.` },
+            ],
+        };
     }
 
 

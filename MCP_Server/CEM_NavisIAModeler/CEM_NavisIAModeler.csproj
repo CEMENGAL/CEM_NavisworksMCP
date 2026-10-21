@@ -26,4 +26,16 @@
         <ProjectReference Include="..\CEM_NavisIAModeler_Shared\CEM_NavisIAModeler_Shared.csproj" />
     </ItemGroup>
 
+    <!--
+        Roslyn compiles send_code_to_navisworks' C# in-process (docs/decisions/0010), the version CEM_RevitMCP's
+        send_code_to_revit uses on net48. Its DLLs ship with the host's bundle; CodeController installs
+        CEM_CSharpExtended's DependencyResolver before it loads them.
+    -->
+    <PropertyGroup>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    </ItemGroup>
+
 </Project>

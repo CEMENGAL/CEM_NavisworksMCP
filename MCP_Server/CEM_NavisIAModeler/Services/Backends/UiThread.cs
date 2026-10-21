@@ -140,6 +140,21 @@ namespace CEM_NavisIAModeler.Services.Backends
         }
 
         /// <summary>
+        /// Cemengal: hands the UI thread back to Navisworks for <paramref name="delayMs"/>, then continues
+        /// on it. A long scan awaits this between slices (UiSlice), so Navisworks keeps repainting and
+        /// taking input while it runs (docs/decisions/0008). Off the UI thread it returns at once.
+        /// </summary>
+        public static Task PauseAsync(int delayMs)
+        {
+            if (!IsOnUiThread) return Task.CompletedTask;
+
+            var ctx = _uiCtx;
+            var tcs = new TaskCompletionSource<object>();
+            Task.Delay(delayMs).ContinueWith(_ => ctx.Post(__ => tcs.SetResult(null), null), TaskScheduler.Default);
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// Runs a synchronous function on the UI thread and returns its result.
         /// - If called on the UI thread, executes directly.
         /// - Otherwise posts it to the UI SynchronizationContext.

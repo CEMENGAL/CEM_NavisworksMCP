@@ -2,9 +2,9 @@
 title: "0005 — No CORS, and refuse requests from browser origins"
 type: decision
 status: current
-updated: 2026-10-07
+updated: 2026-10-21
 sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Client/server/tests/server-security.test.mjs]
-related: [../concepts/known-gaps.md, ../modules/rpc-server.md, ../../../CEM_RevitMCP/docs/decisions/0021-loopback-only-socket.md]
+related: [0009-local-access-token.md, ../concepts/known-gaps.md, ../modules/rpc-server.md, ../../../CEM_RevitMCP/docs/decisions/0021-loopback-only-socket.md]
 tags: [security, http]
 ---
 
@@ -39,4 +39,6 @@ loopback-only for the same class of risk ([its 0021](../../../CEM_RevitMCP/docs/
 
 - A browser-based client (an MCP inspector page, say) cannot call the server. The Node inspector
   (`npm run inspector`) is unaffected.
-- Local processes can still call `/rpc` until a shared secret is added.
+- Local processes can still call `/rpc` until a shared secret is added. **Refined by
+  [0009](0009-local-access-token.md) (2026-10-21):** a per-start token in the user's settings folder is now
+  required on every request but the health check.

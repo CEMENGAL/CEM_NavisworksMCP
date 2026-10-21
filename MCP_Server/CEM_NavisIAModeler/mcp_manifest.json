@@ -22,6 +22,17 @@
     "clash": [
       "run_simple_clash"
     ],
+    "jobs": [
+      "get_server_status",
+      "get_job_status",
+      "cancel_job"
+    ],
+    "code": [
+      "send_code_to_navisworks"
+    ],
+    "view": [
+      "take_screenshot"
+    ],
     "visibility": [
     ],
     "export": [

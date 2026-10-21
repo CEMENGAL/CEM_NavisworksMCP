@@ -78,7 +78,8 @@ namespace CEM_NavisIAModeler.Services.Backends
             Document doc,
             List<string> tokens,
             out int itemCount,
-            out List<ScopeAppliedInfo> infos)
+            out List<ScopeAppliedInfo> infos,
+            List<ModelItem> preResolved = null)
         {
             var col = new ModelItemCollection();
             infos = new List<ScopeAppliedInfo>();
@@ -87,7 +88,8 @@ namespace CEM_NavisIAModeler.Services.Backends
             if (doc == null || tokens == null || tokens.Count == 0)
                 return new Selection(col);
 
-            var items = ResolveItemsByCanonicalIds(doc, tokens);
+            // Cemengal: RunClashAsync resolves the ids first, pausing for the UI (docs/decisions/0008).
+            var items = preResolved ?? ResolveItemsByCanonicalIds(doc, tokens);
             if (items == null || items.Count == 0)
                 return new Selection(col);
 
@@ -98,7 +100,13 @@ namespace CEM_NavisIAModeler.Services.Backends
                 var inputId = GetCanonicalId(it);
                 var name = SafeNameOrDefault(it.DisplayName, it.ClassDisplayName ?? it.ClassName, DEFAULT_UNNAMED);
 
-                var (targets, reason, steps) = ResolveGeometricTargets(it);
+                // Cemengal: a model or other container without geometry goes into the selection itself, and
+                // Clash Detective tests everything under it. Upstream replaced it with the geometric children
+                // of the first container its search met, so a whole-model scope tested one branch of the
+                // model (docs/decisions/0008).
+                var (targets, reason, steps) = !Has_Geometry_From_Item(it) && (it.Children?.Any() ?? false)
+                    ? (new List<ModelItem> { it }, "subtree", 0)
+                    : ResolveGeometricTargets(it);
 
                 var appliedIds = new List<string>();
                 foreach (var t in targets)
@@ -233,22 +241,31 @@ namespace CEM_NavisIAModeler.Services.Backends
 
             try
             {
-                dto = await UiThread.InvokeAsync(() =>
+                // Cemengal: async on the UI thread, so resolving the scopes' ids pauses for Navisworks and stops
+                // when the job is cancelled (docs/decisions/0008).
+                dto = await UiThread.InvokeAsync(async () =>
                 {
                     var doc = Application.MainDocument;
                     if (doc == null)
                         throw new InvalidOperationException("INPUT_VALIDATE;Fail;reason=no active document");
 
-                     
+                    var slice = new UiSlice(ct, doc, "resolving the clash scopes");
+                    var preA = await ResolveCanonicalScopeAsync(doc, args.scopeA, slice);
+                    var preB = await ResolveCanonicalScopeAsync(doc, args.scopeB, slice);
+
                     int cntA, cntB; bool expA, expB;
                     List<ScopeAppliedInfo> infosA, infosB;
 
-                    var selA = BuildSelectionWithPromotionIfCanonical(doc, args.scopeA ?? "all", out cntA, out expA, out infosA);
-                    var selB = BuildSelectionWithPromotionIfCanonical(doc, args.scopeB ?? "all", out cntB, out expB, out infosB);
+                    var selA = BuildSelectionWithPromotionIfCanonical(doc, args.scopeA ?? "all", out cntA, out expA, out infosA, preA);
+                    var selB = BuildSelectionWithPromotionIfCanonical(doc, args.scopeB ?? "all", out cntB, out expB, out infosB, preB);
 
                     if (cntA <= 0) throw new InvalidOperationException("RESOLVE_A;Fail;reason=no items");
                     if (cntB <= 0) throw new InvalidOperationException("RESOLVE_B;Fail;reason=no items");
-                    
+
+                    // Cemengal: the clash test itself cannot pause; the last chance to stop before it.
+                    ct.ThrowIfCancellationRequested();
+                    slice.Phase = "running the clash test";
+
                      
                     var clashDoc = Application.MainDocument.GetClash();
                     var td = clashDoc.TestsData;
@@ -288,9 +305,10 @@ namespace CEM_NavisIAModeler.Services.Backends
                         System.Threading.Thread.Sleep(20);
                     }
                     if (fresh == null) throw new InvalidOperationException("test not found after Run");
-                    
-                     
-                    dto.results = CountClashResultsSafe(added);
+
+                    // Cemengal: count on the test read after the run. `added` belongs to the snapshot taken
+                    // before it, disposed by then: the pilot clash of 2026-10-21 reported 0 (ObjectDisposed).
+                    dto.results = CountClashResultsSafe(fresh);
                     dto.message = $"ok; results={dto.results}";
 
                      
@@ -331,6 +349,10 @@ namespace CEM_NavisIAModeler.Services.Backends
                     return dto;
                 });
             }
+            catch (OperationCanceledException)
+            {
+                throw; // Cemengal: a cancelled job is NVX_CANCELED, not a failed clash (docs/decisions/0008)
+            }
             catch (Exception ex)
             {
                 dto.success = false;
@@ -340,6 +362,21 @@ namespace CEM_NavisIAModeler.Services.Backends
 
             LogHelper.LogEvent("[CLASH][NET] RunClashAsync EXIT");
             return dto;
+        }
+
+        /// <summary>
+        /// Cemengal: resolves a clash scope's canonical ids before the clash builds its selection, pausing
+        /// for the UI as it scans (docs/decisions/0008). Returns null for a scope of names or "all",
+        /// which <see cref="ResolveScopeSelection"/> resolves from the model list.
+        /// </summary>
+        private async Task<List<ModelItem>> ResolveCanonicalScopeAsync(Document doc, string scope, UiSlice slice)
+        {
+            var tokens = (scope ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(t => t.Trim())
+                                      .Where(t => !string.IsNullOrWhiteSpace(t))
+                                      .ToList();
+            if (tokens.Count == 0 || !tokens.Any(LooksLikeCanonicalId)) return null;
+            return await ResolveItemsByCanonicalIdsAsync(doc, tokens, slice);
         }
 
 
@@ -404,6 +441,9 @@ namespace CEM_NavisIAModeler.Services.Backends
                 return sel;
             }
 
+            // Cemengal: each matched model root goes into the selection itself, and Clash Detective tests
+            // everything under it. Upstream copied every descendant into the selection, item by item on
+            // the UI thread: about a million for the structure models (docs/decisions/0008).
             var rootSet = new HashSet<Autodesk.Navisworks.Api.ModelItem>();
             foreach (var token in tokens)
             {
@@ -414,7 +454,7 @@ namespace CEM_NavisIAModeler.Services.Backends
                     {
                         var root = GetModelRootOf(it);  
                         if (root != null && rootSet.Add(root))
-                            col.AddRange(root.DescendantsAndSelf);
+                            col.Add(root);
                     }
                 }
             }
@@ -431,7 +471,7 @@ namespace CEM_NavisIAModeler.Services.Backends
                 var roots = ResolveScopeToModelRoots(doc, token, CancellationToken.None, out diag) ?? new List<Autodesk.Navisworks.Api.ModelItem>();
                 foreach (var r in roots)
                     if (r != null && rootSet.Add(r))
-                        col.AddRange(r.DescendantsAndSelf);
+                        col.Add(r); // Cemengal: the root stands for its subtree (see above)
             }
             if (col.Count > 0)
             {
@@ -444,7 +484,7 @@ namespace CEM_NavisIAModeler.Services.Backends
             {
                 var name = root.DisplayName ?? "";
                 if (tokens.Any(t => name.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0))
-                    col.AddRange(root.DescendantsAndSelf);
+                    col.Add(root); // Cemengal: the root stands for its subtree (see above)
             }
 
             expanded = col.Count > 0;
@@ -470,7 +510,8 @@ namespace CEM_NavisIAModeler.Services.Backends
         private Selection BuildSelectionWithPromotionIfCanonical(
             Document doc, string scope,
             out int itemCount, out bool expanded,
-            out List<ScopeAppliedInfo> infos)
+            out List<ScopeAppliedInfo> infos,
+            List<ModelItem> preResolved = null)
         {
             itemCount = 0; expanded = false; infos = new List<ScopeAppliedInfo>();
 
@@ -481,7 +522,7 @@ namespace CEM_NavisIAModeler.Services.Backends
 
             if (tokens.Count > 0 && tokens.Any(LooksLikeCanonicalId))
             {
-                return BuildSelectionFromCanonicalTokens(doc, tokens, out itemCount, out infos);
+                return BuildSelectionFromCanonicalTokens(doc, tokens, out itemCount, out infos, preResolved);
             }
 
             return ResolveScopeSelection(doc, scope, out itemCount, out expanded);
@@ -542,47 +583,50 @@ namespace CEM_NavisIAModeler.Services.Backends
                 return result;
             }
 
-             
-            var candidates = ResolveScopeItems(doc, args.Scope);  
-            LogHelper.LogDebug($"Scope liefert {candidates.Count} Kandidaten.", "ListItemsToPropertyAsync");
+            // Cemengal: read only the scope's models, item by item, pausing for the UI (docs/decisions/0008).
+            // Upstream ignored Scope and listed all 1,387,034 items of the federated model before reading
+            // any (49 min on 2026-10-21, Navisworks frozen throughout); ModelFilter then only filtered that list.
+            var roots = ResolveScopeRoots(doc, args.Scope, ct, out var scopeDiag);
+            if (roots.Count == 0)
+            {
+                result.message = $"scope '{args.Scope}' matched no model. {scopeDiag}";
+                LogHelper.LogInfo($"list_items_to_property: {result.message}", "ListItemsToPropertyAsync");
+                return result;
+            }
 
-             
             if (!string.IsNullOrWhiteSpace(args.ModelFilter))
             {
                 var allowedRoots = GetAllowedModelRootsByModelFilter(doc, args.ModelFilter, ct);
-                if (allowedRoots.Count == 0)
+                roots = roots.Where(allowedRoots.Contains).ToList();
+                if (roots.Count == 0)
                 {
+                    result.message = $"ModelFilter '{args.ModelFilter}' matched no model in the scope.";
                     LogHelper.LogInfo($"ModelFilter '{args.ModelFilter}' ergab keine Treffer (keine passenden Submodel-Roots).");
-                    candidates = new List<ModelItem>();  
-                }
-                else
-                {
-                    candidates = candidates
-                        .Where(mi => {
-                            var r = GetModelRootOf(mi);
-                            return r != null && allowedRoots.Contains(r);
-                        })
-                        .ToList();
-
-                    LogHelper.LogDebug($"Nach ModelFilter '{args.ModelFilter}' verbleiben {candidates.Count} Items (Root-basiert).", "ListItemsToPropertyAsync");
+                    return result;
                 }
             }
+            LogHelper.LogDebug($"Scope liefert {roots.Count} Modell-Root(s).", "ListItemsToPropertyAsync");
 
-             
             var comparer = BuildValuePredicate(args.ValueFilter, args.IgnoreCase);
-            int added = 0;
-            int? max = args.MaxResults;
+            int max = args.MaxResults.HasValue && args.MaxResults.Value > 0 ? args.MaxResults.Value : DefaultMaxListedItems;
+            var slice = new UiSlice(ct, doc, $"reading '{args.property}'");
 
-            foreach (var item in candidates)
+            foreach (var root in roots)
             {
-                ct.ThrowIfCancellationRequested();
-
-                 
-                var hasValue = TryReadDisplayValue(item, args.category, args.property, out var value, out var rawVariant);
-                if (!hasValue) continue;
-
-                if (comparer == null || comparer(value))  
+                foreach (var item in root.DescendantsAndSelf ?? Enumerable.Empty<ModelItem>())
                 {
+                    if (slice.Step()) await slice.PauseAsync();
+
+                    var hasValue = TryReadDisplayValue(item, args.category, args.property, out var value, out var rawVariant);
+                    if (!hasValue) continue;
+                    if (comparer != null && !comparer(value)) continue;
+
+                    if (result.Items.Count >= max)
+                    {
+                        result.truncated = true;
+                        break;
+                    }
+
                     var modelRoot = GetModelRootOf(item);
                     var modelCid = GetCanonicalId(modelRoot);
                     var ident = GetModelIdentityFromItem(modelRoot);
@@ -598,16 +642,56 @@ namespace CEM_NavisIAModeler.Services.Backends
                         model_canonical_id = modelCid,     
                         PropertyValue = value
                     });
-                    added++;
-
-                    if (max.HasValue && added >= max.Value) break;
                 }
+                if (result.truncated) break;
             }
 
             result.count = result.Items.Count;
-            
-            LogHelper.LogEvent($"list_items_to_property: {result.count} Treffer.", "ListItemsToPropertyAsync");
-            return await Task.FromResult(result);
+            result.message = result.truncated
+                ? $"Stopped at maxResults={max}; more items match. Narrow scope or valueFilter, or raise maxResults."
+                : $"{result.count} items; {slice.Visited} read.";
+
+            LogHelper.LogEvent($"list_items_to_property: {result.count} Treffer, {slice.Visited} gelesen, truncated={result.truncated}.", "ListItemsToPropertyAsync");
+            return result;
+        }
+
+        /// <summary>Cemengal: list_items_to_property's result cap when maxResults is not given (docs/decisions/0008).</summary>
+        private const int DefaultMaxListedItems = 200;
+
+        /// <summary>
+        /// Cemengal: the model roots a scope names (docs/decisions/0008). "all" or empty: every root in
+        /// the document. Otherwise a list (, ; or newline) of model canonical ids, file names, display
+        /// names or extensions, each matched as <see cref="ResolveScopeToModelRoots"/> matches one.
+        /// </summary>
+        private List<ModelItem> ResolveScopeRoots(Document doc, string scope, CancellationToken ct, out string diagnostics)
+        {
+            diagnostics = "";
+            var tokens = (scope ?? "").Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(t => t.Trim())
+                                      .Where(t => t.Length > 0)
+                                      .ToList();
+
+            if (tokens.Count == 0 || tokens.Any(t => t.Equals("all", StringComparison.OrdinalIgnoreCase)))
+                return doc?.Models?.RootItems?.ToList() ?? new List<ModelItem>();
+
+            var subs = ScanSubModels(doc, ct, true);
+            bool Matches(SubModel sm, string t) =>
+                (sm.CanonicalId ?? "").Equals(t, StringComparison.OrdinalIgnoreCase)
+                || (sm.FileOnly ?? "").Equals(t, StringComparison.OrdinalIgnoreCase)
+                || (sm.Display ?? "").Equals(t, StringComparison.OrdinalIgnoreCase)
+                || (!string.IsNullOrEmpty(sm.Ext) && sm.Ext.Equals(t, StringComparison.OrdinalIgnoreCase));
+
+            var roots = subs.Where(sm => sm.Root != null && tokens.Any(t => Matches(sm, t)))
+                            .Select(sm => sm.Root)
+                            .Distinct()
+                            .ToList();
+
+            if (roots.Count == 0)
+            {
+                diagnostics = "available=[" + string.Join(", ", subs.Select(s =>
+                    SafeNameOrDefault(s.FileOnly, s.Display, DEFAULT_UNNAMED) + "|" + s.Ext + "|" + s.CanonicalId)) + "]";
+            }
+            return roots;
         }
 
         /// <summary>
@@ -1549,7 +1633,7 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// - This fallback ignores the requested category filter.  
         /// - Intended for diagnostic or overview purposes rather than exact filtering.  
         /// </remarks>
-        public Task<ElementCountDto> GetPropertyDistributionByCategoryAsync(CancellationToken ct)
+        public async Task<ElementCountDto> GetPropertyDistributionByCategoryAsync(CancellationToken ct)
         {
             const string TAG = "[FALLBACK] GetPropertyDistributionByCategoryAsync / ID13453 (Model→Category→Property + Overview)";
             LogHelper.LogEvent($"{TAG} gestartet (Hinweis: 'category' wird ignoriert).");
@@ -1568,12 +1652,13 @@ namespace CEM_NavisIAModeler.Services.Backends
             {
                 dto.success = false;
                 dto.message = "no document is open";
-                return Task.FromResult(dto);
+                return dto;
             }
 
             try
             {
-                var tuple = BuildCategoryPropertyMaps(doc, ct);
+                // Cemengal: the scan pauses for the UI and stops on cancel (docs/decisions/0008).
+                var tuple = await BuildCategoryPropertyMapsAsync(doc, new UiSlice(ct, doc, "reading properties"), ct);
                 var map = tuple.perModel;
                 var total = tuple.total;
 
@@ -1582,14 +1667,18 @@ namespace CEM_NavisIAModeler.Services.Backends
                 dto.message = RenderCategoryStatsAsMarkdown(map);
 
                 LogHelper.LogSuccess($"{TAG}: Gesamt gezählte Property-Werte = {total}");
-                return Task.FromResult(dto);
+                return dto;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is DocumentChangedException)
+            {
+                throw; // Cemengal: cancelled, or the document changed during the scan
             }
             catch (Exception ex)
             {
                 dto.success = false;
                 dto.message = $"error: {ex.Message}";
                 LogHelper.LogError($"{TAG}: Fehler: {ex}");
-                return Task.FromResult(dto);
+                return dto;
             }
         }
 
@@ -1634,7 +1723,7 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// - Uses <c>CountByCategory</c> helper to count items efficiently.  
         /// - Returns additional guidance in the message if the count is zero (e.g., suggest retry with scope=all).  
         /// </remarks>
-        public Task<ElementCountDto> GetElementCountByCategoryAsync(string category, string scope, CancellationToken ct)
+        public async Task<ElementCountDto> GetElementCountByCategoryAsync(string category, string scope, CancellationToken ct)
         {
             var t0 = DateTime.UtcNow;
             LogHelper.LogEvent($"RPC get_element_count_by_category (Fallback) gestartet: category='{category}', scope='{scope}'.");
@@ -1654,14 +1743,14 @@ namespace CEM_NavisIAModeler.Services.Backends
                 dto.success = false;
                 dto.message = "no document is open";
                 LogHelper.LogWarning("[FALLBACK] get_element_count_by_category: Kein aktives Dokument.");
-                return Task.FromResult(dto);
+                return dto;
             }
             if (string.IsNullOrWhiteSpace(category))
             {
                 dto.success = false;
                 dto.message = "category is empty";
                 LogHelper.LogWarning("[FALLBACK] get_element_count_by_category: 'category' ist leer.");
-                return Task.FromResult(dto);
+                return dto;
             }
 
             var scopeToken = (scope ?? "").Trim();
@@ -1673,14 +1762,16 @@ namespace CEM_NavisIAModeler.Services.Backends
                 try
                 {
                     string diag;
-                    scopedRoots = ResolveScopeToModelRoots(doc, scopeToken, ct, out diag);
+                    // Cemengal: a list of models (, ; or newline), as the client sends it; upstream matched
+                    // the whole list as one name (docs/decisions/0008).
+                    scopedRoots = ResolveScopeRoots(doc, scopeToken, ct, out diag);
 
                     if (scopedRoots == null || scopedRoots.Count == 0)
                     {
                         dto.success = false;
                         dto.message = $"scope(model) not matched: '{scopeToken}'. {diag}";
                         LogHelper.LogWarning($"[FALLBACK] get_element_count_by_category: scope '{scopeToken}' ergab keine Modelltreffer. {diag}");
-                        return Task.FromResult(dto);
+                        return dto;
                     }
 
                     var picked = string.Join(", ", scopedRoots.Select(r =>
@@ -1696,7 +1787,7 @@ namespace CEM_NavisIAModeler.Services.Backends
                     dto.success = false;
                     dto.message = $"scope matching error: {ex.Message}";
                     LogHelper.LogError($"[FALLBACK] get_element_count_by_category: Fehler bei Scope-Zuordnung: {ex}");
-                    return Task.FromResult(dto);
+                    return dto;
                 }
             }
             else
@@ -1712,16 +1803,21 @@ namespace CEM_NavisIAModeler.Services.Backends
             int count;
             try
             {
-                var tuple = CountByCategory(sourceItems, category, ct);
+                // Cemengal: the count pauses for the UI and stops on cancel (docs/decisions/0008).
+                var tuple = await CountByCategoryAsync(sourceItems, category, new UiSlice(ct, doc, $"counting '{category}'"));
                 count = tuple.count;
                 visited = tuple.visited;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is DocumentChangedException)
+            {
+                throw; // Cemengal: cancelled, or the document changed during the count
             }
             catch (Exception ex)
             {
                 dto.success = false;
                 dto.message = $"counting error: {ex.Message}";
                 LogHelper.LogError($"[FALLBACK] get_element_count_by_category: Fehler während der Zählung: {ex}");
-                return Task.FromResult(dto);
+                return dto;
             }
 
             dto.count = count;
@@ -1743,7 +1839,7 @@ namespace CEM_NavisIAModeler.Services.Backends
                 dto.message += $" (category '{category}' not found, if scope was active than maybe help to search over scope=all)";
             }
 
-            return Task.FromResult(dto);
+            return dto;
         }
 
 
@@ -1805,7 +1901,8 @@ namespace CEM_NavisIAModeler.Services.Backends
                     return resultList;
                 }
 
-                var items = ResolveItemsByCanonicalIds(doc, canonical_id);  
+                // Cemengal: the lookup pauses for the UI and stops on cancel (docs/decisions/0008).
+                var items = await ResolveItemsByCanonicalIdsAsync(doc, canonical_id, new UiSlice(ct, doc, "resolving ids"));
                 if (items == null || items.Count == 0)
                 {
                     LogHelper.LogWarning("[FALLBACK] apply_selection: Keine der IDs auflösbar/selektierbar.");
@@ -1827,6 +1924,10 @@ namespace CEM_NavisIAModeler.Services.Backends
 
                 LogHelper.LogSuccess($"[FALLBACK] apply_selection: matched={resultList.Count}, notSelectable={notSelectable.Count}");
                 return resultList;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is DocumentChangedException)
+            {
+                throw; // Cemengal: cancelled, or the document changed during the lookup (docs/decisions/0008)
             }
             catch (Exception ex)
             {
@@ -1983,7 +2084,7 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// - Supports the <c>list_properties_for_item</c> RPC endpoint for clients that need  
         ///   a full property dump of a single selected item.  
         /// </remarks>
-        public Task<ItemPropertiesDto> Get_ListProperties_For_Item(string itemId, CancellationToken ct)
+        public async Task<ItemPropertiesDto> Get_ListProperties_For_Item(string itemId, CancellationToken ct)
         {
             const string M = "[FALLBACK] list_properties_for_item";
             LogHelper.LogEvent($"{M} gestartet: requestId='{itemId}'");
@@ -1991,7 +2092,7 @@ namespace CEM_NavisIAModeler.Services.Backends
             if (doc == null || doc.Models == null)
             {
                 LogHelper.LogWarning($"{M}: Kein aktives Dokument.");
-                return Task.FromResult(new ItemPropertiesDto
+                return (new ItemPropertiesDto
                 {
                     message = "",
                     details = "No active document.",
@@ -2010,13 +2111,14 @@ namespace CEM_NavisIAModeler.Services.Backends
 
             try
             {
-                var itemList = ResolveItemsByCanonicalIds(doc, new List<string> { itemId });
+                // Cemengal: the lookup pauses for the UI and stops on cancel (docs/decisions/0008).
+                var itemList = await ResolveItemsByCanonicalIdsAsync(doc, new List<string> { itemId }, new UiSlice(ct, doc, "resolving ids"));
                 var item = (itemList == null || itemList.Count == 0) ? null : itemList.First();
 
                 if (item == null)
                 {
                     LogHelper.LogWarning($"{M}: Item '{itemId}' nicht gefunden.");
-                    return Task.FromResult(dto);
+                    return dto;
                 }
 
                  
@@ -2046,12 +2148,16 @@ namespace CEM_NavisIAModeler.Services.Backends
 
                 LogHelper.LogDebug($"{M}: Nachfahren gesamt={dto.child_from_this_object.Count}, Struktur-Einträge={dto.path_from_this_object.Count}");
                 LogHelper.LogSuccess($"{M}: OK für '{dto.canonical_id}'");
-                return Task.FromResult(dto);
+                return dto;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is DocumentChangedException)
+            {
+                throw; // Cemengal: cancelled, or the document changed during the lookup
             }
             catch (Exception ex)
             {
                 LogHelper.LogError($"{M}: Fehler: {ex.Message}");
-                return Task.FromResult(dto);
+                return dto;
             }
         }
 
@@ -2086,15 +2192,17 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// - Typically used by <c>GetPropertyDistributionByCategoryAsync</c> to build statistical overviews.  
         /// - Ensures unique model IDs (falls back to hashed display name if no canonical ID).  
         /// </remarks>
-        private (Dictionary<string, Dictionary<string, Dictionary<string, int>>> perModel, int total)
-        BuildCategoryPropertyMaps(Document doc, CancellationToken ct)
+        private async Task<(Dictionary<string, Dictionary<string, Dictionary<string, int>>> perModel, int total)>
+        BuildCategoryPropertyMapsAsync(Document doc, UiSlice slice, CancellationToken ct)
         {
             var perModel = new Dictionary<string, Dictionary<string, Dictionary<string, int>>>(StringComparer.OrdinalIgnoreCase);
             int totalCount = 0;
 
             foreach (var sm in ScanSubModels(doc, ct, false))  
             {
-                if (ct.IsCancellationRequested) break;
+                // Cemengal: cancel stops the scan with OperationCanceledException; upstream's break returned
+                // the models read so far as a complete, successful result (docs/decisions/0008).
+                ct.ThrowIfCancellationRequested();
                 var root = sm.Root;
                 if (root == null) continue;
 
@@ -2114,6 +2222,8 @@ namespace CEM_NavisIAModeler.Services.Backends
 
                 foreach (var item in root.DescendantsAndSelf ?? Enumerable.Empty<ModelItem>())
                 {
+                    if (slice.Step()) await slice.PauseAsync(); // Cemengal: give Navisworks its turn
+
                     foreach (PropertyCategory cat in item?.PropertyCategories ?? Enumerable.Empty<PropertyCategory>())
                     {
                         var catName = SafeNameOrDefault(cat?.DisplayName, cat?.Name, DEFAULT_CATEGORY);
@@ -2171,13 +2281,15 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// - If the <paramref name="ct"/> is signaled, iteration stops early,  
         ///   returning whatever counts were collected so far.  
         /// </remarks>
-        private (int count, int visited) 
-        CountByCategory(IEnumerable<ModelItem> sourceItems, string category, CancellationToken ct)
+        private async Task<(int count, int visited)>
+        CountByCategoryAsync(IEnumerable<ModelItem> sourceItems, string category, UiSlice slice)
         {
             int count = 0, visited = 0;
             foreach (var item in sourceItems)
             {
-                if (ct.IsCancellationRequested) break;
+                // Cemengal: pause for the UI; a cancel throws instead of returning a partial count as the
+                // whole one (docs/decisions/0008).
+                if (slice.Step()) await slice.PauseAsync();
                 if (item == null) continue;
                 visited++;
 
@@ -2295,6 +2407,15 @@ namespace CEM_NavisIAModeler.Services.Backends
         /// Caught internally: Any unexpected errors during resolution are logged, and an empty list is returned.
         /// </exception>
         private List<ModelItem> ResolveItemsByCanonicalIds(Document doc, IEnumerable<string> ids)
+            // Cemengal: without a slice the core never awaits, so it completes synchronously (docs/decisions/0008).
+            => ResolveItemsByCanonicalIdsAsync(doc, ids, null).GetAwaiter().GetResult();
+
+        /// <summary>
+        /// Cemengal: <see cref="ResolveItemsByCanonicalIds"/>, matching the model roots before scanning the
+        /// items and pausing for the UI during the scan when given a <paramref name="slice"/>
+        /// (docs/decisions/0008). Cancellation surfaces as OperationCanceledException.
+        /// </summary>
+        private async Task<List<ModelItem>> ResolveItemsByCanonicalIdsAsync(Document doc, IEnumerable<string> ids, UiSlice slice)
         {
             var result = new List<ModelItem>();
             try
@@ -2366,17 +2487,39 @@ namespace CEM_NavisIAModeler.Services.Backends
                     LogHelper.LogWarning("Lookup: Unbekannte ID-Formate werden ignoriert:\n" + string.Join(", ", unknownIds.Take(20)) + (unknownIds.Count > 20 ? " ..." : ""));
                 }
 
-                IEnumerable<ModelItem> allItems =
-                    (doc.Models ?? Enumerable.Empty<Model>())
-                    .Where(m => m != null && m.RootItem != null)
-                    .SelectMany(m => m.RootItem.DescendantsAndSelf);
-
                 int scanned = 0;
                 int matchedGuid = 0;
                 int matchedHash = 0;
 
+                // Cemengal: model ids, the ones get_model_overview hands out, are matched against the model
+                // list first; a model root's path is its own name, so no other item shares its hash. The
+                // pilot clash of 2026-10-21 scanned all 1,387,034 items twice (2 x 4.5 min) to find two
+                // models. Names that are not ids (a clash scope of file names) no longer start a scan at
+                // all (docs/decisions/0008).
+                var modelRoots = hashMap.Count > 0 ? ScanSubModels(doc, CancellationToken.None, true) : new List<SubModel>();
+                foreach (var sm in modelRoots)
+                {
+                    var cid = sm.CanonicalId ?? "";
+                    if (sm.Root == null || !cid.StartsWith("p:", StringComparison.OrdinalIgnoreCase)) continue;
+                    var h = cid.Substring(2);
+                    List<string> rootIds;
+                    if (!hashMap.TryGetValue(h, out rootIds)) continue;
+                    foreach (var id in rootIds)
+                        resolvedById[id].Add(sm.Root);
+                    hashMap.Remove(h);
+                    matchedHash++;
+                }
+
+                IEnumerable<ModelItem> allItems = (guidMap.Count == 0 && hashMap.Count == 0)
+                    ? Enumerable.Empty<ModelItem>()
+                    : (doc.Models ?? Enumerable.Empty<Model>())
+                        .Where(m => m != null && m.RootItem != null)
+                        .SelectMany(m => m.RootItem.DescendantsAndSelf);
+                if (slice != null) slice.Phase = "resolving ids";
+
                 foreach (var mi in allItems)
                 {
+                    if (slice != null && slice.Step()) await slice.PauseAsync();
                     if (mi == null) { scanned++; continue; }
 
                     var ig = mi.InstanceGuid;
@@ -2434,6 +2577,10 @@ namespace CEM_NavisIAModeler.Services.Backends
                 }
 
                 return result;
+            }
+            catch (Exception ex) when (ex is OperationCanceledException || ex is DocumentChangedException)
+            {
+                throw; // Cemengal: cancelled, or the document changed under the scan (docs/decisions/0008)
             }
             catch (Exception ex)
             {

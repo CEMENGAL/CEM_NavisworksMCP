@@ -1,9 +1,9 @@
 ---
 title: "Add a tool — the four places it lives"
 type: workflow
-updated: 2026-10-07
+updated: 2026-10-21
 sources: [MCP_Client/server/index.js, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Server/CEM_NavisIAModeler/mcp_manifest.json, MCP_Client/manifest.json]
-related: [../concepts/rpc-contract.md, ../modules/rpc-server.md, ../modules/node-client.md, test.md]
+related: [../concepts/rpc-contract.md, ../decisions/0008-one-job-at-a-time.md, ../modules/rpc-server.md, ../modules/node-client.md, test.md]
 tags: [workflow, tool]
 ---
 
@@ -27,3 +27,10 @@ A tool named `get_x` (snake_case; it is both the MCP tool name and the RPC metho
 
 A tool that changes the document should be idempotent where it can be, and its result should say
 what it changed.
+
+Every route runs as a job, one at a time ([0008](../decisions/0008-one-job-at-a-time.md)); nothing to
+add for that. In the controller, pass the backend `CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken)`,
+never a fixed timeout (`job-server.test.mjs` checks). A backend loop over model items creates a
+`UiSlice` and calls `if (slice.Step()) await slice.PauseAsync();` once per item, so Navisworks stays
+responsive and `cancel_job` works; let `OperationCanceledException` and `DocumentChangedException`
+through any catch-all. Read only the models the scope names, and cap what a reply can list.

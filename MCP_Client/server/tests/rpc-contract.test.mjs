@@ -12,9 +12,14 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..', '..', '..');
 const read = (...parts) => readFileSync(join(repo, ...parts), 'utf8');
 
-/** Methods the Node client calls: this.rpc('name', ...) or this.t_simple('name'). */
+/**
+ * Methods the Node client calls: this.rpc('name', ...), this.t_simple('name'), and in navis-rpc.js
+ * postRpc(baseUrl, 'name', ...).
+ */
 export function clientMethods(source) {
-    return new Set([...source.matchAll(/\b(?:rpc|t_simple)\(\s*['"]([a-z0-9_.]+)['"]/g)].map(m => m[1]));
+    const direct = [...source.matchAll(/\b(?:rpc|t_simple)\(\s*['"]([a-z0-9_.]+)['"]/g)].map(m => m[1]);
+    const posted = [...source.matchAll(/\bpostRpc\(\s*[\w.]+\s*,\s*['"]([a-z0-9_.]+)['"]/g)].map(m => m[1]);
+    return new Set([...direct, ...posted]);
 }
 
 /** MCP tools the Node client lists: { name: 'tool', ... }. Each is named after its RPC method. */
@@ -34,7 +39,7 @@ export function manifestMethods(json) {
 }
 
 const clientSource = read('MCP_Client', 'server', 'index.js');
-const client = clientMethods(clientSource);
+const client = clientMethods(clientSource + '\n' + read('MCP_Client', 'server', 'navis-rpc.js'));
 const tools = clientTools(clientSource);
 const server = serverRoutes(read('MCP_Server', 'CEM_NavisIAModeler', 'Mapping', 'RpcMap.cs'));
 const manifest = manifestMethods(read('MCP_Server', 'CEM_NavisIAModeler', 'mcp_manifest.json'));
@@ -72,6 +77,11 @@ test('serverRoutes ignores commented-out routes', () => {
 test('clientMethods accepts both quote styles and the t_simple helper', () => {
     const methods = clientMethods(`await this.rpc('a', {}); await this.rpc("b"); this.t_simple('c');`);
     assert.deepEqual([...methods].sort(), ['a', 'b', 'c']);
+});
+
+test('clientMethods finds the methods navis-rpc.js posts itself', () => {
+    const methods = clientMethods(`await postRpc(baseUrl, 'get_job_status', {}); postRpc(url, method, params);`);
+    assert.deepEqual([...methods], ['get_job_status']);
 });
 
 test('clientTools skips the hyphenated server name', () => {

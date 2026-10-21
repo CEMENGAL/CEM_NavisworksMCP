@@ -87,6 +87,18 @@ namespace CEM_NavisIAModeler.Mapping
             // ---------- Clash ----------
             routes["run_simple_clash"] = wrap(clash.RunSimpleClash);
 
+            // ---------- Jobs (Cemengal: docs/decisions/0008) ----------
+            var jobs = new JobsController();
+            routes["get_server_status"] = wrap(jobs.GetServerStatus);
+            routes["get_job_status"] = wrap(jobs.GetJobStatus);
+            routes["cancel_job"] = wrap(jobs.CancelJob);
+
+            // ---------- Code and view (Cemengal: docs/decisions/0010) ----------
+            var code = new CodeController();
+            var view = new ViewController();
+            routes["send_code_to_navisworks"] = wrap(code.SendCode);
+            routes["take_screenshot"] = wrap(view.TakeScreenshot);
+
             // ---------- System ----------
            // routes["ping"] = wrap(sys.Ping);
           //  routes["get_server_info"] = wrap(sys.GetServerInfo);

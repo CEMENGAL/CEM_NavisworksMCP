@@ -79,7 +79,12 @@ namespace CEM_NavisIAModeler.Infrastructure
                 return RpcResponse<object>.Fail("NVX_NOT_FOUND", $"Unknown method '{req.method}'");
 
             LogHelper.LogDebug($"Dispatch: {req.method}");
-            return handler(req);
+
+            // Cemengal: one request at a time, as a job. A second request is refused at once with
+            // NVX_BUSY instead of queueing on Navisworks' UI thread, and a long one answers with its
+            // job id; the job tools themselves run at once (docs/decisions/0008).
+            if (RpcJobs.Immediate.Contains(req.method)) return handler(req);
+            return RpcJobs.Run(req.method, () => handler(req));
         }
     }
 }

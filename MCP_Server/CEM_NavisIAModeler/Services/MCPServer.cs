@@ -21,10 +21,15 @@ namespace CEM_NavisIAModeler.Services
     {
         private readonly int _port;
         private readonly HttpListener _listener = new HttpListener();
-        private readonly JavaScriptSerializer _jss = new JavaScriptSerializer();
+        // Cemengal: no 2 MB reply limit (the serializer's default). A whole-model property distribution can
+        // pass it after minutes of scanning, and the reply was then lost (docs/decisions/0008).
+        private readonly JavaScriptSerializer _jss = new JavaScriptSerializer { MaxJsonLength = int.MaxValue };
         private readonly RpcRouter _router;
         private CancellationTokenSource _cts;
         private Task _acceptLoopTask;
+
+        // Cemengal: this start's access token; every request but the health check must carry it (docs/decisions/0009).
+        private string _token;
 
         /// <summary>
         /// Fired when the server emits an informational message (e.g. startup, shutdown).
@@ -92,6 +97,19 @@ namespace CEM_NavisIAModeler.Services
                     _listener.Prefixes.Add(urlB);
 
                 _listener.Start();
+
+                // Cemengal: issued once the port is ours, so a start that fails to bind never replaces the
+                // token of an AI Modeler already listening. No token file, no server (docs/decisions/0009).
+                try
+                {
+                    _token = AccessToken.Issue();
+                }
+                catch
+                {
+                    _listener.Stop();
+                    throw;
+                }
+
                 _cts = new CancellationTokenSource();
                 _acceptLoopTask = Task.Run(() => AcceptLoopAsync(_cts.Token), _cts.Token);
 
@@ -121,6 +139,9 @@ namespace CEM_NavisIAModeler.Services
         {
             if (!IsRunning) return;
 
+            // Cemengal: a job must not keep Navisworks busy after the AI Modeler stops (docs/decisions/0008).
+            RpcJobs.CancelRunning("the AI Modeler was stopped");
+
             try
             {
                 _cts?.Cancel();
@@ -137,6 +158,9 @@ namespace CEM_NavisIAModeler.Services
                 IsRunning = false;
                 _cts?.Dispose();
                 _cts = null;
+
+                AccessToken.Revoke(_token); // Cemengal: docs/decisions/0009
+                _token = null;
             }
         }
 
@@ -213,6 +237,17 @@ namespace CEM_NavisIAModeler.Services
                 if (method == "GET" && path == "/health")
                 {
                     await WriteTextAsync(res, 200, "OK").ConfigureAwait(false);
+                    return;
+                }
+
+                // Cemengal: everything past the health check needs this start's token (docs/decisions/0009).
+                if (!AccessToken.IsAuthorized(req.Headers["Authorization"], _token))
+                {
+                    await WriteJsonAsync(res, 401, new
+                    {
+                        ok = false,
+                        error = new { code = "NVX_UNAUTHORIZED", msg = "Missing or wrong access token. The client reads it from the AI Modeler's token file in the user's Navisworks settings folder." }
+                    }).ConfigureAwait(false);
                     return;
                 }
 
@@ -371,6 +406,7 @@ namespace CEM_NavisIAModeler.Services
             try { _cts?.Cancel(); } catch { }
             try { _listener?.Close(); } catch { }
             try { _cts?.Dispose(); } catch { }
+            AccessToken.Revoke(_token); // Cemengal: docs/decisions/0009
         }
     }
 }

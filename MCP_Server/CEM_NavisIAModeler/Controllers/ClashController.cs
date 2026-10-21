@@ -37,7 +37,7 @@ namespace CEM_NavisIAModeler.Controllers
                 var args = _jss.ConvertToType<ClashRunArgs>(req.@params);
 
                 // Apply cancellation with a configured timeout
-                var ct = new CancellationTokenSource(Settings.DefaultTimeoutMs).Token;
+                var ct = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken).Token; // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
 
                 // Run the clash detection via backend
                 var dto = BackendResolver.Instance.RunClashAsync(args, ct)

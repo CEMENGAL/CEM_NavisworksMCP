@@ -35,7 +35,7 @@ namespace CEM_NavisIAModeler.Controllers
             {
                 return Wrap(() =>
                 {
-                    var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                     var dto = _svc.GetOverviewAsync(cts.Token).GetAwaiter().GetResult();
                     return RpcResponse<ModelOverviewDto>.Success(dto);
                 });
@@ -53,7 +53,7 @@ namespace CEM_NavisIAModeler.Controllers
         {
             return Wrap(() =>
             {
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.GetUnitsAsync(cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<UnitInfoDto>.Success(dto);
             });
@@ -73,7 +73,7 @@ namespace CEM_NavisIAModeler.Controllers
             {
                 return Wrap(() =>
                 {
-                    var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                    var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                     var dto = _svc.GetPropertyDistributionByCategoryAsync(cts.Token).GetAwaiter().GetResult();
                     return RpcResponse<ElementCountDto>.Success(dto);
                 });

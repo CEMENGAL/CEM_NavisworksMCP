@@ -59,7 +59,11 @@ namespace CEM_NavisIAModeler.Services.Backends
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.LogWarning($"[ReflectionBackend::{opName}] UI-path failed → fallback. {ex.Message}");
+                    // Cemengal: no re-run after a failure. Upstream ran the same call again off the UI thread:
+                    // a cancelled 49-minute scan started over on a pool thread, beside the next one on the
+                    // UI thread, both calling the Navisworks API (2026-10-21; docs/decisions/0008).
+                    LogHelper.LogWarning($"[ReflectionBackend::{opName}] UI-path failed: {ex.Message}");
+                    throw;
                 }
             }
             else

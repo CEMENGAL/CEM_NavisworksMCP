@@ -32,7 +32,7 @@ namespace CEM_NavisIAModeler.Controllers
         {
             return Wrap(() =>
             {
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.ClearSelectionAsync(cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<ApplyResultDto>.Success(dto);
             });
@@ -50,7 +50,7 @@ namespace CEM_NavisIAModeler.Controllers
         {
             return Wrap(() =>
             {
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.GetSnapshotAsync(cts.Token).GetAwaiter().GetResult();
                 return RpcResponse<SelectionSnapshotDto>.Success(dto);
             });
@@ -91,7 +91,7 @@ namespace CEM_NavisIAModeler.Controllers
                     throw new ArgumentException("canonical_id[] (string) required.");
 
                 // 4) Call selection service
-                var cts = new CancellationTokenSource(Settings.DefaultTimeoutMs);
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(RpcJobs.CurrentToken); // Cemengal: the job's token, not a fixed 10 s (docs/decisions/0008)
                 var dto = _svc.ApplySelectionAsync(ids, keep, cts.Token).GetAwaiter().GetResult();
 
                 // 5) Return unchanged as List<SimpleItemRef>
