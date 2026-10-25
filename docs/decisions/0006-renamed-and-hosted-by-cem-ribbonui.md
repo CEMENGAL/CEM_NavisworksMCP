@@ -2,7 +2,7 @@
 title: "0006 — Renamed to CEM_NavisIAModeler and hosted by CEM_NavisworksAPI's ribbon, like CEM_RevitMCP"
 type: decision
 status: current
-updated: 2026-10-07
+updated: 2026-10-24
 sources:
   - MCP_Server/CEM_NavisIAModeler/Core/MCPServiceConnection.cs
   - MCP_Server/Directory.Build.props
@@ -45,7 +45,8 @@ box that stayed open behind the work.
   | `waabe_navi_mcp.sln` | `CEM_NavisworksMCP.sln` | |
   | client `waabe-navisworks-mcp` | `cem-navis-aimodeler` | the MCP server name agents see, the `.dxt` and npm name |
 
-  Settings and log files follow (`CEM_NavisIAModeler_settings.xml`, `CEM_NavisIAModeler_log.md`).
+  Settings and log files follow (`CEM_NavisIAModeler_settings.xml`, `CEM_NavisIAModeler_log.md`; the log is
+  `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log` since [0011](0011-logs-in-local-temp-nothing-under-acc.md)).
   User-visible "WAABE" texts became "CEM AI Modeler"; the plugin developer id is `CEMG`. Upstream's
   internal class names (`IWaabeService`, `IWaabeNavisworksBackend`, `WaabeRibbon`) stay, as
   CEM_RevitMCP kept upstream class names.

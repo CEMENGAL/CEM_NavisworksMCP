@@ -41,6 +41,11 @@ Search with qmd when the index is not enough (`qmd query -c cem_navismcp "..."`)
   loop over model items does `if (slice.Step()) await slice.PauseAsync();` (`UiSlice`) so Navisworks stays
   responsive and `cancel_job` works; a UI-thread failure is never re-run off it
   ([0008](../../../docs/decisions/0008-one-job-at-a-time.md)); `npm test` guards this.
+- Nothing writes under ACC (`C:\DC\ACCDocs`) or next to a DLL. A log or a temporary file goes through
+  CEM_CSharpExtended's `CemTempFolder` (`%TEMP%\Cemengal\NavisworksMCP`, pruned on its own); settings and the
+  token go through `CemUserHome`, never temp. Screenshots and scripts stay in memory. A new file write fails
+  `file-writes.test.mjs` until it is classified ([0011](../../../docs/decisions/0011-logs-in-local-temp-nothing-under-acc.md),
+  root [0031](../../../../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md)).
 
 ## Verify
 

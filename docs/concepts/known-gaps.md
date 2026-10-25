@@ -1,9 +1,9 @@
 ---
 title: "Known gaps — what is missing, unverified or risky"
 type: concept
-updated: 2026-10-21
+updated: 2026-10-24
 sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/FallbackBackend.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Plugins/MCPServerRegistrar.cs]
-related: [../workflows/smoke-test.md, upstream-and-fork.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md]
+related: [../workflows/smoke-test.md, upstream-and-fork.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md]
 tags: [gaps, security, drift]
 ---
 
@@ -56,7 +56,8 @@ here or in the other C# consumers.
 4. **Stale prebuilt artifacts.** `generated_MCP_Server/waabe_navi_mcp.bundle.zip` and
    `generated_MCP_Client/waabe-navisworks-mcp.dxt` are upstream's 2026 builds. Do not install them.
 5. **No audit log.** CEM_RevitMCP routes every command through an audit log; this server only writes
-   `LogHelper` lines to `CEM_NavisIAModeler_log.md`, `[JOB]` lines included. The last 20 jobs are kept in
+   `LogHelper` lines to the daily `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log`, `[JOB]` lines
+   included, kept 7 days at most ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)). The last 20 jobs are kept in
    memory only, and forgotten when the AI Modeler restarts.
 6. **Two upstream CS1998 warnings** (async methods without `await`, in `MCPServer.cs` and
    `FallbackBackend.cs`). Harmless; left as upstream wrote them.
@@ -67,7 +68,7 @@ here or in the other C# consumers.
    path does not use the registrar.
 9. **Manifest `base_url` repeats the port** (`http://127.0.0.1:8765:8765/`) in `GET /manifest`;
    upstream's `GetBaseUrl` appends the port to a host that already has it. The client does not use it.
-10. **The standalone bundle does not ship `CEM_CSharpExtended.dll`, nor Roslyn.** The `DeployNavisworksBundle` copy list in `CEM_NavisIAModeler_Ribbon.csproj` carries only the three DLLs, but the Shared project now needs CEM_CSharpExtended and its dependencies (SocketIO*, System.Text.Json, System.Memory...). The hosted bundle has them; a standalone install (no CEM_NavisworksAPI) fails to load `LogHelper`/`SettingsManager` until they are added. Since [0010](../decisions/0010-send-code-and-screenshot.md) the server also needs `Microsoft.CodeAnalysis*.dll` and their dependencies for `send_code_to_navisworks`.
+10. **The standalone bundle does not ship CEM_CSharpExtended's dependencies, nor Roslyn.** Since [0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md) (2026-10-24) the `DeployNavisworksBundle` copy list in `CEM_NavisIAModeler_Ribbon.csproj` carries `CEM_CSharpExtended.dll` with the three DLLs, enough for `LogHelper` and `SettingsManager` (`CemTempFolder` and `CemUserHome` use the BCL only); build-checked, never deployed in a Cemengal checkout. Its dependencies (SocketIO*, System.Text.Json, System.Memory...) and, since [0010](../decisions/0010-send-code-and-screenshot.md), `Microsoft.CodeAnalysis*.dll` for `send_code_to_navisworks` are still missing; the hosted bundle has them all.
 11. **Roslyn's language folders deploy with the host bundle.** `cs`, `de`, `es`, `fr`, `it`, `ja`, `ko`, `pl`,
    `pt-BR`, `ru`, `tr`, `zh-Hans`, `zh-Hant` reach CEM_NavisworksAPI's output and its bundle (and the ACC menu,
    when published). Harmless; CEM_NavisworksAPI's `CEM_RibbonUI` would drop them with

@@ -10,31 +10,19 @@ namespace CEM_NavisIAModeler_Shared
 {
     /// <summary>
     /// Provides logging functionality for WAABE Navisworks add-ins.
-    /// - Writes structured log entries into a Markdown file (<c>CEM_NavisIAModeler_log.md</c>).
-    /// - Automatically resolves the correct bundle path or falls back to AppData / Documents.
+    /// - Writes one line per entry into today's log, <c>%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log</c>.
     /// - Supports different log levels (Info, Warning, Error, Success, Debug).
     /// - Adds startup and shutdown banners for projects.
+    /// Cemengal: through CEM_CSharpExtended's CemTempFolder (root decision 0031, docs/decisions/0011), a local folder
+    /// that prunes itself; never the DLL folder (the menu may live in a shared ACC folder), nor roaming AppData.
     /// </summary>
     public static class LogHelper
     {
-        private static readonly string LogPath = GetBundleLogPath();
+        /// <summary>The log's folder under %TEMP%\Cemengal (root 0031's app name).</summary>
+        private const string App = "NavisworksMCP";
 
-        /// <summary>
-        /// Resolves the log path in the per-user home (CemUserHome). Cemengal: never next to the DLL,
-        /// the menu may live in a shared ACC folder.
-        /// </summary>
-        private static string GetBundleLogPath()
-        {
-            try
-            {
-                return CemUserHome.NavisworksFile("CEM_NavisIAModeler_log.md");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Log path failed: {ex.Message}");
-                return Path.Combine(Path.GetTempPath(), "CEM_NavisIAModeler_log.md");
-            }
-        }
+        /// <summary>The log's name: <c>CEM_NavisIAModeler-yyyyMMdd.log</c>.</summary>
+        private const string Name = "CEM_NavisIAModeler";
 
         /// <summary>
         /// Logs a message with automatic project detection based on the calling assembly.
@@ -49,28 +37,18 @@ namespace CEM_NavisIAModeler_Shared
         /// </summary> 
         public static void LogEvent(string msg, string projectName)
         {
-            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
             var projectPrefix = string.IsNullOrEmpty(projectName) ? "" : $"[{projectName}] ";
-            var line = $"| {timestamp} | {projectPrefix}{msg} |";
+            var line = $"{timestamp} {projectPrefix}{msg}";
 
-            try
+            // Cemengal: today's file, appended shared and never throwing (root 0031); was one Markdown table that grew forever.
+            if (!CemTempFolder.AppendLog(App, Name, line))
             {
-                 
-                if (!File.Exists(LogPath))
-                {
-                    CreateLogHeader();
-                }
-
-                File.AppendAllLines(LogPath, new[] { line });
-
-                 
-                System.Diagnostics.Debug.WriteLine($"[WAABE-{projectName}] {timestamp}: {msg}");
-
+                HandleLogError(timestamp, msg, projectName);
+                return;
             }
-            catch (Exception ex)
-            {
-                HandleLogError(ex, timestamp, msg, projectName);
-            }
+
+            System.Diagnostics.Debug.WriteLine($"[WAABE-{projectName}] {timestamp}: {msg}");
         }
 
         /// <summary>
@@ -190,59 +168,22 @@ namespace CEM_NavisIAModeler_Shared
         }
 
         /// <summary>
-        /// Creates the initial Markdown log header if the log file does not exist.
+        /// Handles logging errors by writing to the Debug console. Cemengal: no second file in %TEMP% (root 0031),
+        /// and no Markdown header: the daily file has one line per entry.
         /// </summary>
-        private static void CreateLogHeader()
+        private static void HandleLogError(string timestamp, string msg, string projectName)
         {
-            var header = new[]
-            {
-                "# WAABE Navisworks AddIn Log",
-                $"**Erstellt:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
-                $"**LogPath:** {LogPath}",
-                $"**Shared-DLL:** {Assembly.GetExecutingAssembly().Location}",
-                "",
-                "## Projekt-Abkürzungen:",
-                "- **[MCP]** = CEM_NavisIAModeler_Ribbon (Hauptprojekt)",
-                "- **[CHAT]** = waabe_navi_chatfenster",
-                "- **[SERVER]** = CEM_NavisIAModeler",
-                "- **[SHARED]** = CEM_NavisIAModeler_Shared",
-                "",
-                "| Zeitstempel | Nachricht |",
-                "|-------------|-----------|"
-            };
-            File.WriteAllLines(LogPath, header);
-        }
-
-        /// <summary>
-        /// Handles logging errors by writing to the Debug console and optionally a fallback file.
-        /// </summary>
-        private static void HandleLogError(Exception ex, string timestamp, string msg, string projectName)
-        {
-             
-            System.Diagnostics.Debug.WriteLine($"[WAABE-ERROR] LogHelper Fehler: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"[WAABE-ERROR] Versuchter Pfad: {LogPath}");
+            System.Diagnostics.Debug.WriteLine($"[WAABE-ERROR] LogHelper could not write to: {GetCurrentLogPath()}");
             System.Diagnostics.Debug.WriteLine($"[WAABE-FALLBACK] {timestamp}: [{projectName}] {msg}");
-
-             
-            try
-            {
-                var tempLog = Path.Combine(Path.GetTempPath(), "CEM_NavisIAModeler_fallback_log.md");
-                var fallbackLine = $"| {timestamp} | [{projectName}] {msg} |\n";
-                File.AppendAllText(tempLog, fallbackLine);
-            }
-            catch
-            {
-                 
-            }
         }
 
 
         /// <summary>
-        /// Returns the current log file path being used.
+        /// Returns the current log file path being used: today's file (a session over midnight rolls to the next one).
         /// </summary>
         public static string GetCurrentLogPath()
         {
-            return LogPath;
+            return CemTempFolder.LogFile(App, Name);
         }
 
         /// <summary>
@@ -270,7 +211,7 @@ namespace CEM_NavisIAModeler_Shared
             try
             {
                 LogDebug($"Per-user home: {CemUserHome.NavisworksFolder}");
-                LogDebug($"Finaler Log-Pfad: {LogPath}");
+                LogDebug($"Finaler Log-Pfad: {GetCurrentLogPath()}");
             }
             catch (Exception ex)
             {

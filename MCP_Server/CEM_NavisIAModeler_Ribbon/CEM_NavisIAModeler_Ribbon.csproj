@@ -37,7 +37,7 @@
         Standalone bundle (docs/decisions/0002, 0006), replacing upstream's xcopy post-build events:
           %APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisIAModeler.bundle\
             PackageContents.xml
-            Contents\v<series>\  the three DLLs
+            Contents\v<series>\  the three DLLs and CEM_CSharpExtended.dll (CemUserHome, CemTempFolder: root 0031)
             Ribbon\Buttons.xml, Ribbon\Icons\*.png
             Settings\
         Runs only when CemStandaloneDeploy (no CEM_NavisworksAPI sibling, not built by its host) and
@@ -51,7 +51,7 @@
             <BundleContentDir>$(BundleDir)Contents\v$(NavisworksSeries)\</BundleContentDir>
         </PropertyGroup>
         <ItemGroup>
-            <BundleContentFile Include="$(TargetDir)CEM_NavisIAModeler.dll;$(TargetDir)CEM_NavisIAModeler_Ribbon.dll;$(TargetDir)CEM_NavisIAModeler_Shared.dll;$(TargetDir)*.pdb" />
+            <BundleContentFile Include="$(TargetDir)CEM_NavisIAModeler.dll;$(TargetDir)CEM_NavisIAModeler_Ribbon.dll;$(TargetDir)CEM_NavisIAModeler_Shared.dll;$(TargetDir)CEM_CSharpExtended.dll;$(TargetDir)*.pdb" />
             <BundleIcon Include="$(MSBuildThisFileDirectory)Ribbon\Icons\*.png" />
         </ItemGroup>
         <Copy Condition="'$(_DeployNavisworks)' == 'true'" SourceFiles="@(BundleContentFile)" DestinationFolder="$(BundleContentDir)" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />

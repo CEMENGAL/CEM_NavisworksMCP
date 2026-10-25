@@ -15,9 +15,16 @@ namespace CEM_NavisIAModeler.Services
     {
         private static readonly string SettingsPath = GetSettingsPath();
 
+        // Cemengal: the settings of this session when there is no per-user settings file (SettingsPath == null).
+        // Settings are not temp files (root decision 0031 §5, docs/decisions/0011): they are kept in memory, from the
+        // defaults, and the next start tries CemUserHome again.
+        private static int _sessionPort = 8765;
+        private static bool _sessionEnabled;
+
         /// <summary>
         /// Resolves the path to the settings XML file in the per-user home (CemUserHome), creates a default
-        /// file if missing. Cemengal: never next to the DLL, the menu may live in a shared ACC folder.
+        /// file if missing. Cemengal: never next to the DLL, the menu may live in a shared ACC folder; null when
+        /// the home cannot be used, and the settings stay in memory.
         /// </summary>
         private static string GetSettingsPath()
         {
@@ -33,8 +40,8 @@ namespace CEM_NavisIAModeler.Services
             }
             catch (Exception ex)
             {
-                LogHelper.LogEvent($"Fehler beim Settings-Pfad: {ex.Message}");
-                return Path.Combine(Path.GetTempPath(), "CEM_NavisIAModeler_settings.xml");
+                LogHelper.LogEvent($"Fehler beim Settings-Pfad: {ex.Message}. Settings are kept in memory for this session.");
+                return null;
             }
         }
 
@@ -74,6 +81,8 @@ namespace CEM_NavisIAModeler.Services
         /// </summary>
         public static int GetMCPPort()
         {
+            if (SettingsPath == null) return _sessionPort; // Cemengal: no settings file, see _sessionPort
+
             try
             {
                 if (!File.Exists(SettingsPath))
@@ -108,6 +117,13 @@ namespace CEM_NavisIAModeler.Services
         /// </summary>
         public static void SaveMCPPort(int port)
         {
+            if (SettingsPath == null) // Cemengal: no settings file, see _sessionPort
+            {
+                _sessionPort = port;
+                LogHelper.LogEvent($"Port {port} kept in memory for this session (no settings file)");
+                return;
+            }
+
             try
             {
                 XmlDocument doc;
@@ -167,6 +183,8 @@ namespace CEM_NavisIAModeler.Services
         /// </summary>
         public static bool GetMCPServerEnabled()
         {
+            if (SettingsPath == null) return _sessionEnabled; // Cemengal: no settings file, see _sessionPort
+
             try
             {
                 if (!File.Exists(SettingsPath)) return false;
@@ -195,6 +213,12 @@ namespace CEM_NavisIAModeler.Services
         /// </summary>
         public static void SaveMCPServerEnabled(bool enabled)
         {
+            if (SettingsPath == null) // Cemengal: no settings file, see _sessionPort
+            {
+                _sessionEnabled = enabled;
+                return;
+            }
+
             try
             {
                 if (!File.Exists(SettingsPath))
@@ -221,7 +245,7 @@ namespace CEM_NavisIAModeler.Services
         }
 
         /// <summary>
-        /// Returns the absolute file path of the settings XML.
+        /// Returns the absolute file path of the settings XML; null when the settings are kept in memory (Cemengal).
         /// </summary>
         public static string GetSettingsFilePath()
         {

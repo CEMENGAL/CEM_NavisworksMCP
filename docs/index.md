@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP wiki — index"
 type: index
-updated: 2026-10-21
+updated: 2026-10-25
 sources: [README.md, MCP_Server/README.md, MCP_Client/README.md]
 related: [overview.md, log.md]
 tags: [index]
@@ -41,6 +41,10 @@ from the Cemengal tab's **AI → AI Modeler** button (CEM_NavisworksAPI hosts it
 8. One request at a time, as a job: never queue work on the UI thread behind other work, never give it
    a fixed timeout (the job's token), and make every scan over model items pause with `UiSlice`; the
    client ends each tool call inside the host's 60 s timeout → [0008](decisions/0008-one-job-at-a-time.md)
+9. Nothing writes under ACC (`ACCDocs`) or next to a DLL: logs and temporary files only through
+   CEM_CSharpExtended's `CemTempFolder` (`%TEMP%\Cemengal\NavisworksMCP`), settings and the token only through
+   `CemUserHome`, never in temp; a new file write is classified first; `npm test` guards it
+   → [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md), root [0031](../../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md)
 
 **3. Before you change X, read Y.**
 
@@ -49,6 +53,7 @@ from the Cemengal tab's **AI → AI Modeler** button (CEM_NavisworksAPI hosts it
 | Add or change a tool | [add a tool](workflows/add-a-tool.md), [RPC contract](concepts/rpc-contract.md), [server](modules/rpc-server.md), [client](modules/node-client.md) |
 | Running code in Navisworks, screenshots, the access token | [0010](decisions/0010-send-code-and-screenshot.md), [0009](decisions/0009-local-access-token.md), [server](modules/rpc-server.md) (`CodeRunner`, `ScreenCapture`, `AccessToken`) |
 | Anything slow, a scan over model items, timeouts, "Navisworks is not answering" | [0008](decisions/0008-one-job-at-a-time.md) (one job at a time, scans pause for the UI, the client's time budgets), [server](modules/rpc-server.md) (`RpcJobs`, `UiSlice`) |
+| Writing any file: a log, a screenshot, an export, settings | [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md), [0007](decisions/0007-per-user-home-no-writes-next-to-the-dll.md), root [0031](../../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md), [shared](modules/shared.md) (`LogHelper`) |
 | Starting / stopping, the host button, the port | [0006](decisions/0006-renamed-and-hosted-by-cem-ribbonui.md), [server](modules/rpc-server.md) (`Core/MCPServiceConnection`), [standalone ribbon](modules/addin-ribbon.md) |
 | csproj, build, bundle, a new Navisworks year | [build and deploy](workflows/build-and-deploy.md), [0001](decisions/0001-sdk-style-2027-build.md), [0002](decisions/0002-msbuild-bundle-deploy.md) |
 | Pulling from upstream | [upstream and fork](concepts/upstream-and-fork.md), [0004](decisions/0004-minimal-divergence-from-upstream.md) |
@@ -105,6 +110,7 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [0008](decisions/0008-one-job-at-a-time.md): one request at a time, as a job; long scans pause for Navisworks; the client ends every tool call inside the host's timeout (current).
 - [0009](decisions/0009-local-access-token.md): a per-start access token in the user's settings folder on every request (current).
 - [0010](decisions/0010-send-code-and-screenshot.md): `send_code_to_navisworks` (Roslyn, the escape hatch) and `take_screenshot` (current).
+- [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md): nothing under ACC; the log in a self-cleaning `%TEMP%\Cemengal\NavisworksMCP`; settings never in temp; every file write accounted for by a test (current).
 
 ### Sources
 
@@ -113,5 +119,6 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [CEM_NavisworksAPI#16](sources/issues/CEMENGAL-CEM_NavisworksAPI-16.md): "Mejorar NavisworksMCP": no more freezes (0008), the access token (0009), code and screenshots (0010).
 - [CEM_API#68](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md): the wiki for every repo; here, qmd through the machine's shared server (open).
 - [CEM_API#74](sources/issues/CEM-EnriqueRuiz-CEM_API-74.md): one shared request layer per language; here, the C# rule and the 2026-10-11 review (open).
+- [CEM_API#82](sources/issues/CEM-EnriqueRuiz-CEM_API-82.md): "Borrar logs in ACC de los MCP": the file-write audit, the log in a self-cleaning local temp folder, settings never in temp (0011).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).
 - [commits 2026-10](sources/commits/2026-10.md): the Cemengal fork, the 2027 port, the rename and the hosting.

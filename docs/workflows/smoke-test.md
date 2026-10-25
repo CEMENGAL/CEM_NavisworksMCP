@@ -1,9 +1,9 @@
 ---
 title: "Smoke test — the AI Modeler and its tools in Navisworks"
 type: workflow
-updated: 2026-10-21
+updated: 2026-10-24
 sources: [MCP_Server/CEM_NavisIAModeler/Core/MCPServiceConnection.cs, MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, ../../CEM_NavisworksAPI/CEM_RibbonUI/CemRibbon.cs]
-related: [build-and-deploy.md, connect-an-agent.md, ../concepts/known-gaps.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md]
+related: [build-and-deploy.md, connect-an-agent.md, ../concepts/known-gaps.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md]
 tags: [verify, manual]
 ---
 
@@ -15,7 +15,9 @@ The bar for anything that runs inside Navisworks.
    (standalone) ([build and deploy](build-and-deploy.md)); check the output names the bundle folder.
 2. Start Navisworks and open a model (`../../CEM_Test/CEM_NavisworksAPI/Prueba.nwf`, three IFC models).
    The **Cemengal** tab should show three buttons (the AI Modeler under **AI**, then the connection and IFC Comparator ones; Hello World was deleted on 2026-10-15), and there should be
-   no other MCP tab. If not, read `CEM_NavisIAModeler_log.md` in the bundle folder.
+   no other MCP tab. If not, read today's `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log`
+   ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md); `CEM_NavisIAModeler_log.md` in the bundle
+   folder before 2026-10-24).
 3. Press **AI Modeler**: no dialog; the button stays pressed and reads `AI Modeler (8765)`.
 4. From a terminal:
    ```powershell
@@ -51,7 +53,13 @@ The bar for anything that runs inside Navisworks.
      the whole window.
 8. Press **AI Modeler** again: the label returns to `AI Modeler`, `/health` stops answering and the token
    file is gone.
-9. Record the Navisworks build, the date and the results below and in the change's source page.
+9. **Files** ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)): the session's log lines are in
+   today's `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log`; nothing else appeared there (no
+   screenshot, no script), nothing beside the deployed DLLs (`Contents\v24`) and nothing under `C:\DC\ACCDocs`.
+   Under `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\Settings` only the token (start, stop)
+   and the settings file (start, stop) change. Open test models from a local copy: Navisworks itself writes a
+   `.nwc` cache beside each file it opens.
+10. Record the Navisworks build, the date and the results below and in the change's source page.
 
 ## Results
 
@@ -105,3 +113,23 @@ AI Modeler.
 
 The first run kept going after Claude Code reported it stopped, so two `MCP smoke …` tests are in the
 document. Not run yet: the four tools in [known gaps](../concepts/known-gaps.md) item 1.
+
+**2026-10-24, files ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)).** Same machine; the RDP
+session was not rendering, so no ribbon click: a throwaway starter plugin (in the agent's scratchpad, never
+deployed) called `MCPServiceConnection.ToggleAsync`, loaded with
+`Roamer.exe -AddPluginAssembly <dll> -ExecuteAddInPlugin "CemAIModelerStarter.CEMT"`. The three STC01 drainage
+IFCs of `CEM_Test\MCP` were opened from copies in `%TEMP%` by `send_code_to_navisworks`
+(`TryOpenFile`, `TryAppendFile`). Driven through `index.js` over stdio, as Claude Desktop runs it, from a Python
+`mcp` client. A file watcher recorded `C:\DC\ACCDocs` and `%APPDATA%\Autodesk\ApplicationPlugins`.
+
+| Step | Result |
+|---|---|
+| Start | log lines in `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-20261024.log` from the first one (`[UIINIT] ctx=WindowsFormsSynchronizationContext`); watcher: the token (2 events) and the settings file (4) in `CEM_NavisworksAPI.bundle\Settings`, nothing in `Contents\v24` |
+| `send_code_to_navisworks` (open the copies) | three models; compiled 4.6 s, ran 17.6 s |
+| Overview, units, `get_element_count_by_category` | 3 models; mm; `IfcPipeSegment` 560 |
+| `list_items_to_property` | `Elemento` / `Nombre` (the Spanish UI's names; `Item` / `Name` found 0), scoped, `valueFilter` `Pipe`: 3 items |
+| `apply_selection`, snapshot, `list_properties_for_item`, `clear_selection` | 1 model selected; the properties of a model root and of `Pipe - (275) 200 PVC DR-35` (`IfcPipeSegment`) |
+| `take_screenshot` view and window | PNGs of 800 × 337 and 800 × 323, even on the non-rendering session |
+| `send_code_to_navisworks` (harmless) | Roamer's `TEMP` is the user's (`C:\Users\…\AppData\Local\Temp`, no per-process folder); `LogHelper.GetCurrentLogPath()` is today's file |
+| Files after 17 calls | only the log changed (223 lines, 21 KB, the only file in the folder); nothing in the bundle, nothing in `CEM_Test\MCP`; Navisworks wrote a `.nwc` cache beside each opened copy |
+| Watcher | no event during the calls; no `ACCDocs` event since 21:13, before the session |

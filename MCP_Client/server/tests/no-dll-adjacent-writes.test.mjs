@@ -1,6 +1,7 @@
 // Cemengal: the Navisworks menu lives in a shared ACC folder, so the add-in must never write next to
 // its DLL (docs/decisions/0007). The manifest is served from memory and is not written to disk;
-// per-user files (settings, log) go to the per-user home, never derived from the DLL folder.
+// settings go to the per-user home and the log to the local temp folder (0011), never derived from
+// the DLL folder. file-writes.test.mjs accounts for every other write.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -23,11 +24,11 @@ test('the standalone bundle does not ship a written mcp_manifest.json', () => {
     assert.doesNotMatch(server('CEM_NavisIAModeler_Ribbon', 'CEM_NavisIAModeler_Ribbon.csproj'), /BundleContentFile[^>]*mcp_manifest\.json/);
 });
 
-test('settings and the log resolve through CemUserHome, never from the DLL folder', () => {
+test('settings resolve through CemUserHome and the log through CemTempFolder, never from the DLL folder', () => {
     const settings = server('CEM_NavisIAModeler', 'Services', 'SettingsManager.cs');
     const log = server('CEM_NavisIAModeler_Shared', 'LogHelper.cs');
     assert.match(settings, /CemUserHome\.NavisworksSettingsFile\(/);
-    assert.match(log, /CemUserHome\.NavisworksFile\(/);
+    assert.match(log, /CemTempFolder\.AppendLog\(/); // root 0031, file-writes.test.mjs
     for (const [name, src] of [['SettingsManager', settings], ['LogHelper', log]]) {
         assert.doesNotMatch(src.replace(/\/\/.*$/gm, ''), /GetDirectoryName\(|SpecialFolder\.MyDocuments|ApplicationPlugins/, `${name} derives a path`);
     }
