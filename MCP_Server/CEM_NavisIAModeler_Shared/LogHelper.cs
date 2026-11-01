@@ -173,17 +173,30 @@ namespace CEM_NavisIAModeler_Shared
         /// </summary>
         private static void HandleLogError(string timestamp, string msg, string projectName)
         {
-            System.Diagnostics.Debug.WriteLine($"[WAABE-ERROR] LogHelper could not write to: {GetCurrentLogPath()}");
+            System.Diagnostics.Debug.WriteLine($"[WAABE-ERROR] LogHelper could not write to: {GetCurrentLogPath() ?? "(unavailable)"}");
             System.Diagnostics.Debug.WriteLine($"[WAABE-FALLBACK] {timestamp}: [{projectName}] {msg}");
         }
 
 
         /// <summary>
         /// Returns the current log file path being used: today's file (a session over midnight rolls to the next one).
+        /// Cemengal: null when CemTempFolder refuses it (a junction or link in %TEMP%\Cemengal, SEC-8) or cannot name it,
+        /// so logging degrades to the Debug console and never throws (QA-10, docs/decisions/0011).
         /// </summary>
         public static string GetCurrentLogPath()
         {
-            return CemTempFolder.LogFile(App, Name);
+            try
+            {
+                return CemTempFolder.LogFile(App, Name);
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -191,7 +204,14 @@ namespace CEM_NavisIAModeler_Shared
         /// </summary>
         public static void LogStartup()
         {
-            LogProjectStartup("WAABE-SYSTEM");
+            // Cemengal: the banner in a try of its own, so a failing log never breaks startup (QA-10).
+            try
+            {
+                LogProjectStartup("WAABE-SYSTEM");
+            }
+            catch
+            {
+            }
 
             try
             {

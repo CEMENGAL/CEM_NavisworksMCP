@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisIAModeler_Shared — service registry and logging"
 type: module
-updated: 2026-10-24
+updated: 2026-11-01
 sources: [MCP_Server/CEM_NavisIAModeler_Shared/ServiceRegistry.cs, MCP_Server/CEM_NavisIAModeler_Shared/LogHelper.cs, MCP_Server/CEM_NavisIAModeler_Shared/IWaabeService.cs, MCP_Server/CEM_NavisIAModeler_Shared/WaabeRibbon.cs]
 related: [addin-ribbon.md, rpc-server.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md]
 tags: [module, shared]
@@ -18,6 +18,7 @@ the standalone ribbon; CEM_RibbonUI references it too, with the host flag, so MS
   today's `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log` through CEM_CSharpExtended's
   `CemTempFolder.AppendLog` (shared, thread-safe, never throws; the folder prunes itself after 7 days or
   50 MB). A line that cannot be written goes to the debugger output only. `GetCurrentLogPath()` names today's
-  file ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md); until 2026-10-24 a Markdown
+  file, or null when `CemTempFolder` refuses it (a junction in `%TEMP%\Cemengal`, SEC-8) or cannot name it:
+  logging never throws, and `LogStartup`'s banner sits in a try of its own (QA-10) ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md); until 2026-10-24 a Markdown
   `CEM_NavisIAModeler_log.md` in the per-user home, [0007](../decisions/0007-per-user-home-no-writes-next-to-the-dll.md)).
 - `WaabeRibbon`: upstream's ribbon constants (class name kept).

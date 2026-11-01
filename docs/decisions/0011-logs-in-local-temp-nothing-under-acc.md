@@ -2,7 +2,7 @@
 title: "0011 — Nothing under ACC; the log in a self-cleaning local temp folder, settings never in temp"
 type: decision
 status: current
-updated: 2026-10-25
+updated: 2026-11-01
 sources:
   - https://github.com/CEM-EnriqueRuiz/CEM_API/issues/82
   - ../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md
@@ -55,7 +55,11 @@ No source, project or script of the repo names an ACC path.
   and thread-safe, never throwing. The folder is pruned on the first write of each process (7 days, then the
   oldest until 50 MB). A line is `HH:mm:ss.fff [PROJECT] message`; the Markdown header is gone. When a line
   cannot be written it goes to the debugger output only: no second file. `LogHelper`'s public methods are
-  unchanged; `GetCurrentLogPath()` names today's file.
+  unchanged; `GetCurrentLogPath()` names today's file. Logging never throws: since CEM_CSharpExtended's SEC-8
+  fix `CemTempFolder.LogFile` throws `CemTempFolderUnsafeException` (an `IOException`) for a junction in
+  `%TEMP%\Cemengal` while `AppendLog` only answers false, so `GetCurrentLogPath()` catches `IOException` and
+  `ArgumentException` and answers null, and `LogStartup` runs its banner in a try (QA-10, 2026-11-01,
+  [CEM_Workspace#5](../sources/issues/CEMENGAL-CEM_Workspace-5.md); `tests/logging-never-throws.test.mjs`).
 - **Settings without a per-user home stay in memory.** When `CemUserHome` cannot give the settings file,
   `SettingsManager` keeps the port (8765) and the enabled state for the session; a save changes the
   in-memory value and is logged; `GetSettingsFilePath()` is null. The next start tries `CemUserHome` again.

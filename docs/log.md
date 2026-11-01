@@ -1,7 +1,7 @@
 ---
 title: "Wiki log"
 type: log
-updated: 2026-10-11
+updated: 2026-11-01
 sources: []
 related:
   - index.md
@@ -58,3 +58,6 @@ At the user's request (no writes under ACC, logs in a local temp folder that cle
 
 ## [2026-10-25] ingest | CEM-EnriqueRuiz/CEM_API#82 Nothing of the AI Modeler under ACC; the log in local temp
 The user tested the 2026-10-24 work, sent the issue (empty body) and kept every change; only the MCPs were in question, and root 0031 now gives them no exception. Added [sources/issues/CEM-EnriqueRuiz-CEM_API-82](sources/issues/CEM-EnriqueRuiz-CEM_API-82.md): what was asked, the audit, each decision with its reason and the rejected alternatives, the user's decisions, the files changed, the tests (red first, 51/51), the live calls and the watcher result, and what stays open (the stale old logs, Navisworks' `.nwc` cache, the reported doc drift). [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md) cites the issue and the user's acceptance; the index lists the source page. The ACC publish of the Navisworks menu stays with the coordinator.
+
+## [2026-11-01] ingest | CEMENGAL/CEM_Workspace#5 QA-10: the AI Modeler's logging never throws
+The QA reviewer's recheck 2 of `2026-11-01-mcp-modeller` found QA-10 (Medium): since CEM_CSharpExtended's SEC-8 fix, `CemTempFolder.LogFile` throws `CemTempFolderUnsafeException` on a junction in `%TEMP%\Cemengal`, and `LogHelper` called it unguarded from its error path, so every log call threw, startup included. `GetCurrentLogPath()` now catches `IOException` and `ArgumentException` and answers null, `HandleLogError` prints `(unavailable)`, and `LogStartup`'s banner has a try of its own. New guard `logging-never-throws.test.mjs` (red first, 2 of 3; then 54/54); `Debug N27` builds against the local CEM_CSharpExtended. Added [sources/issues/CEMENGAL-CEM_Workspace-5](sources/issues/CEMENGAL-CEM_Workspace-5.md); updated [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md), [shared](modules/shared.md), [test](workflows/test.md) and the index. QA's check 3 confirmed the fix. Not run in Navisworks with a real junction.

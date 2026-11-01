@@ -1,7 +1,7 @@
 ---
 title: "Test — the contract and security tests"
 type: workflow
-updated: 2026-10-24
+updated: 2026-11-01
 sources: [MCP_Client/server/tests/, MCP_Client/server/package.json, ../.claude/run-tests.ps1]
 related: [../decisions/0003-rpc-contract-tests.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md, ../concepts/rpc-contract.md, smoke-test.md]
 tags: [testing]
@@ -23,6 +23,7 @@ No `npm install` is needed: the tests use only `node:test` and read files. Green
 | `tests/default-port.test.mjs` | every default-port literal on both halves is 8765, not CEM_RevitMCP's 8080 ([0006](../decisions/0006-renamed-and-hosted-by-cem-ribbonui.md)) |
 | `tests/no-dll-adjacent-writes.test.mjs` | the manifest is not written to disk, settings resolve through `CemUserHome` and the log through `CemTempFolder` ([0007](../decisions/0007-per-user-home-no-writes-next-to-the-dll.md)) |
 | `tests/file-writes.test.mjs` | every file write accounted for ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)): no shipped source names an `ACCDocs` path; the only C# writers are `SettingsManager` and `AccessToken`, through `CemUserHome`, never from the DLL, temp or a special folder; no hand-made temp path; screenshot and script in memory only; the log through `CemTempFolder`; settings never fall back to a file; the client imports no `fs` write; the standalone bundle ships `CEM_CSharpExtended.dll` |
+| `tests/logging-never-throws.test.mjs` | read from `LogHelper.cs`: `GetCurrentLogPath` catches `IOException` (the refused junction, SEC-8) and `ArgumentException`, `HandleLogError` calls `CemTempFolder` only through it, `LogStartup` calls nothing outside a try ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md), QA-10) |
 | `tests/access-token.test.mjs` | both halves name the same token file in the user's settings folder; the token is random, issued at start and revoked at stop; every route but the health check is checked before routing; constant-time comparison ([0009](../decisions/0009-local-access-token.md)) |
 | `tests/code-and-screenshot.test.mjs` | `DependencyResolver` installed before Roslyn loads, compile before the UI-thread run, scripts never logged or written, the screenshot a bounded PNG in memory ([0010](../decisions/0010-send-code-and-screenshot.md)) |
 | `tests/job-protocol.test.mjs` | the client's job protocol against a fake AI Modeler that demands the token (an immediate reply, a job followed to its end, a job past the budget, cancelled, busy, nothing listening, no answer, a stale token), and that the time budgets nest from `RpcJobs.cs` to the host's 60 s ([0008](../decisions/0008-one-job-at-a-time.md)) |
