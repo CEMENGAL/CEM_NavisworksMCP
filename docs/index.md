@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP wiki — index"
 type: index
-updated: 2026-11-01
+updated: 2026-11-03
 sources: [README.md, MCP_Server/README.md, MCP_Client/README.md]
 related: [overview.md, log.md]
 tags: [index]
@@ -123,3 +123,4 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [CEM_Workspace#5](sources/issues/CEMENGAL-CEM_Workspace-5.md): the MCPs for the modelling agent; here, QA-10, logging that never throws on a junctioned temp folder (0011).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).
 - [commits 2026-10](sources/commits/2026-10.md): the Cemengal fork, the 2027 port, the rename and the hosting.
+- [commits 2026-11](sources/commits/2026-11.md): the `navisworks` server declared in `.mcp.json`.

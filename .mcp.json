@@ -1,5 +1,6 @@
 {
   "mcpServers": {
-    "qmd": { "type": "http", "url": "http://127.0.0.1:8181/mcp" }
+    "qmd": { "type": "http", "url": "http://127.0.0.1:8181/mcp" },
+    "navisworks": { "type": "stdio", "command": "node", "args": ["MCP_Client/server/index.js"] }
   }
 }

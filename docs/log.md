@@ -1,7 +1,7 @@
 ---
 title: "Wiki log"
 type: log
-updated: 2026-11-01
+updated: 2026-11-03
 sources: []
 related:
   - index.md
@@ -61,3 +61,6 @@ The user tested the 2026-10-24 work, sent the issue (empty body) and kept every 
 
 ## [2026-11-01] ingest | CEMENGAL/CEM_Workspace#5 QA-10: the AI Modeler's logging never throws
 The QA reviewer's recheck 2 of `2026-11-01-mcp-modeller` found QA-10 (Medium): since CEM_CSharpExtended's SEC-8 fix, `CemTempFolder.LogFile` throws `CemTempFolderUnsafeException` on a junction in `%TEMP%\Cemengal`, and `LogHelper` called it unguarded from its error path, so every log call threw, startup included. `GetCurrentLogPath()` now catches `IOException` and `ArgumentException` and answers null, `HandleLogError` prints `(unavailable)`, and `LogStartup`'s banner has a try of its own. New guard `logging-never-throws.test.mjs` (red first, 2 of 3; then 54/54); `Debug N27` builds against the local CEM_CSharpExtended. Added [sources/issues/CEMENGAL-CEM_Workspace-5](sources/issues/CEMENGAL-CEM_Workspace-5.md); updated [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md), [shared](modules/shared.md), [test](workflows/test.md) and the index. QA's check 3 confirmed the fix. Not run in Navisworks with a real junction.
+
+## [2026-11-03] ingest | The navisworks MCP server declared in .mcp.json
+At the user's request, with no issue link and the reviews skipped by their decision: `.mcp.json` declares `navisworks` with a relative path, so it works from any checkout, and the tracked `.claude/settings.local.json` enables it. Added [sources/commits/2026-11](sources/commits/2026-11.md) with the decisions and the rejected alternatives (an absolute path, a user-level registration only) and listed it in the index. [Connect an agent](workflows/connect-an-agent.md) step 2: no `claude mcp add` inside this repo; `npm install` is still needed. The proof listed 15 tools over stdio; it does not reach Navisworks.
