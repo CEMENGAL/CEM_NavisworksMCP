@@ -1,7 +1,7 @@
 ---
 title: "Add a tool — the four places it lives"
 type: workflow
-updated: 2026-10-21
+updated: 2026-11-05
 sources: [MCP_Client/server/index.js, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Server/CEM_NavisIAModeler/mcp_manifest.json, MCP_Client/manifest.json]
 related: [../concepts/rpc-contract.md, ../decisions/0008-one-job-at-a-time.md, ../modules/rpc-server.md, ../modules/node-client.md, test.md]
 tags: [workflow, tool]
@@ -16,7 +16,8 @@ A tool named `get_x` (snake_case; it is both the MCP tool name and the RPC metho
    `this.t_simple('get_x')` without parameters). Run `npm test`: the contract test fails, because no
    route exists.
 2. **Server:** a controller method (in the matching `Controllers/*Controller.cs`, with its parameter type
-   in `Contracts/Queries.cs` and checks from `Validation/Validators.cs`), a backend call in
+   in `Contracts/Queries.cs`; `Validation/Validators.cs` holds upstream checks that no controller calls today,
+   [known gaps](../concepts/known-gaps.md) item 13), a backend call in
    `Services/Backends/` that runs on the UI thread, and the route
    `routes["get_x"] = wrap(controller.GetX);` in `Mapping/RpcMap.cs`.
 3. **Manifest:** add `get_x` to its group in `mcp_manifest.json`. `npm test` is green again.

@@ -1,8 +1,8 @@
 ---
 title: "Test — the contract and security tests"
 type: workflow
-updated: 2026-11-01
-sources: [MCP_Client/server/tests/, MCP_Client/server/package.json, ../.claude/run-tests.ps1]
+updated: 2026-11-05
+sources: [MCP_Client/server/tests/, MCP_Client/server/package.json, MCP_Client/.mcpbignore, ../.claude/run-tests.ps1]
 related: [../decisions/0003-rpc-contract-tests.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md, ../concepts/rpc-contract.md, smoke-test.md]
 tags: [testing]
 ---
@@ -18,7 +18,7 @@ No `npm install` is needed: the tests use only `node:test` and read files. Green
 
 | File | Checks |
 |---|---|
-| `tests/rpc-contract.test.mjs` | client calls and tools are routed; manifest = routes; the parsers ([RPC contract](../concepts/rpc-contract.md)) |
+| `tests/rpc-contract.test.mjs` | client calls and tools are routed; manifest = routes; the parsers ([RPC contract](../concepts/rpc-contract.md)); `.dxtignore` and `.mcpbignore` leave `server/tests/` and the stale `.dxt` out of the package, and `.mcpbignore` matches the package root only ([node client](../modules/node-client.md)) |
 | `tests/server-security.test.mjs` | no CORS, browser `Origin`s refused, loopback-only prefixes ([0005](../decisions/0005-no-cors-refuse-browser-origins.md)) |
 | `tests/default-port.test.mjs` | every default-port literal on both halves is 8765, not CEM_RevitMCP's 8080 ([0006](../decisions/0006-renamed-and-hosted-by-cem-ribbonui.md)) |
 | `tests/no-dll-adjacent-writes.test.mjs` | the manifest is not written to disk, settings resolve through `CemUserHome` and the log through `CemTempFolder` ([0007](../decisions/0007-per-user-home-no-writes-next-to-the-dll.md)) |
@@ -29,7 +29,7 @@ No `npm install` is needed: the tests use only `node:test` and read files. Green
 | `tests/job-protocol.test.mjs` | the client's job protocol against a fake AI Modeler that demands the token (an immediate reply, a job followed to its end, a job past the budget, cancelled, busy, nothing listening, no answer, a stale token), and that the time budgets nest from `RpcJobs.cs` to the host's 60 s ([0008](../decisions/0008-one-job-at-a-time.md)) |
 | `tests/job-server.test.mjs` | read from the C# sources: only the job tools skip the one-job rule, every request goes through `RpcJobs`, no controller uses a fixed timeout, a UI-thread failure is not re-run, stopping cancels the job ([0008](../decisions/0008-one-job-at-a-time.md)) |
 
-51 tests since [0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md) (2026-10-24), all green (`rpc-contract` also checks that `index.js` parses: a comment
+56 tests since 2026-11-05 (51 since [0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md), 54 since `logging-never-throws`), all green (`rpc-contract` also checks that `index.js` parses: a comment
 that swallowed a comma got past the text-only checks once, and only a live handshake caught it). They say nothing about behaviour inside Navisworks: use the
 [smoke test](smoke-test.md) for that. Also build the solution ([build](build-and-deploy.md)): the
 C# side has no unit tests ([0003](../decisions/0003-rpc-contract-tests.md)). C# that needs no Navisworks can
@@ -37,6 +37,10 @@ still be run once by a throwaway harness outside the repo: on 2026-10-24 a `net4
 `SettingsManager.cs` against a stand-in `CemUserHome` that throws, with `TMP` pointed at an empty folder; the
 HEAD version wrote `CEM_NavisIAModeler_settings.xml` there (red), the new one kept the port in memory and wrote
 only its log line (green) ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)).
+
+The ignore-file checks only read the files. What a package really holds is shown by packing it outside the repo:
+`npx @anthropic-ai/mcpb pack MCP_Client <scratch>/x.mcpb` lists its contents (no `tests/`, no `.dxt`), and the
+unpacked `server/index.js` should answer an MCP `initialize` and `tools/list` with the fifteen tools.
 
 New logic is test-first: when adding a tool, add it to the client and see the contract test fail
 until the route and the manifest exist ([add a tool](add-a-tool.md)).

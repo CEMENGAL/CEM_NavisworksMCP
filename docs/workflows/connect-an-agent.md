@@ -1,7 +1,7 @@
 ---
 title: "Connect an agent — start the AI Modeler and register the client"
 type: workflow
-updated: 2026-11-03
+updated: 2026-11-05
 sources: [.mcp.json, .claude/settings.local.json, MCP_Client/manifest.json, MCP_Client/README.md, MCP_Client/server/index.js, MCP_Client/server/navis-rpc.js]
 related: [../modules/node-client.md, smoke-test.md, ../concepts/known-gaps.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md]
 tags: [mcp, claude, setup]
@@ -35,4 +35,5 @@ tags: [mcp, claude, setup]
    not an error: Navisworks runs one request at a time, and the agent waits with `get_job_status`;
    `get_server_status` says what is running ([0008](../decisions/0008-one-job-at-a-time.md)).
 
-Never install upstream's `generated_MCP_Client/waabe-navisworks-mcp.dxt`: it is the 2026 build.
+Never install upstream's `generated_MCP_Client/waabe-navisworks-mcp.dxt` or `MCP_Client/waabe-navisworks-mcp.dxt`:
+they are 2026 builds ([known gaps](../concepts/known-gaps.md) item 4).

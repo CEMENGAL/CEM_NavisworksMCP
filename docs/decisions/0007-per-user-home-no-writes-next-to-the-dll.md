@@ -2,7 +2,7 @@
 title: "0007 — The AI Modeler writes nothing next to its DLL; per-user files live in CemUserHome"
 type: decision
 status: current
-updated: 2026-10-24
+updated: 2026-11-05
 sources:
   - MCP_Server/CEM_NavisIAModeler/Services/SettingsManager.cs
   - MCP_Server/CEM_NavisIAModeler_Shared/LogHelper.cs
@@ -31,7 +31,9 @@ path. Anything written next to the DLL would sync to every colleague and fail wh
     state: it moved to `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log` (CEM_CSharpExtended's
     `CemTempFolder`, pruned on its own), out of the roaming profile. Settings have no `%TEMP%` last resort any
     more: without `CemUserHome` they stay in memory for the session.
-- Reading shipped files next to the DLL (`ButtonXmlLoader`, standalone ribbon only) is fine.
+- Reading shipped files next to the DLL (`Helpers/ButtonsXmlLoader`, standalone ribbon only) is fine. (This
+  line named `ButtonXmlLoader` until 2026-11-05: that is `Ribbon/ButtonXmlLoader.cs`, an upstream class nothing
+  calls, [known gaps](../concepts/known-gaps.md) item 13.)
 - `CEM_NavisIAModeler_Shared` references CEM_CSharpExtended (core), so the standalone bundle must also ship
   `CEM_CSharpExtended.dll` and its dependencies (the DLL itself since [0011](0011-logs-in-local-temp-nothing-under-acc.md)).
 

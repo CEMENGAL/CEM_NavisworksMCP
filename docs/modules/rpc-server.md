@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisIAModeler — the AI Modeler's HTTP/RPC server inside Navisworks"
 type: module
-updated: 2026-10-24
+updated: 2026-11-05
 sources: [MCP_Server/CEM_NavisIAModeler/Core/MCPServiceConnection.cs, MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcRouter.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Server/CEM_NavisIAModeler/Controllers/JobsController.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/]
 related: [../concepts/rpc-contract.md, ../decisions/0006-renamed-and-hosted-by-cem-ribbonui.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md, addin-ribbon.md, node-client.md, ../workflows/add-a-tool.md]
 tags: [module, server, rpc]
@@ -27,11 +27,11 @@ ships in `CEM_NavisIAModeler.bundle` with [the standalone ribbon](addin-ribbon.m
 | `Infrastructure/RpcJobs.cs` (Cemengal) | **One request at a time, as a job** ([0008](../decisions/0008-one-job-at-a-time.md)): another request while one runs gets `NVX_BUSY` at once; a job still running after 20 s answers `NVX_JOB_RUNNING` with its id. `CurrentToken` is the running job's cancellation token; `Report` takes a scan's progress; the last 20 jobs are kept. `Immediate` names the three job tools. |
 | `Mapping/RpcMap.cs` | **The route table**: method name → controller method, each wrapped to add `meta` (timing). The names are [the RPC contract](../concepts/rpc-contract.md). |
 | `Controllers/` | One per domain: `Model`, `Search`, `Selection`, `Clash`, `Jobs` (Cemengal: `get_server_status`, `get_job_status`, `cancel_job`), `Code` (Cemengal: `send_code_to_navisworks`), `View` (Cemengal: `take_screenshot`), plus `Export`, `Visibility` and `System`, which have no routes yet. They deserialize `params` into `Contracts/Queries.cs` types and call a backend with the job's token. |
-| `Validation/Validators.cs` | `EnsureNonEmpty`, `EnsureLimit` (1–5000), `EnsureOffset`. |
+| `Validation/Validators.cs` | `EnsureNonEmpty`, `EnsureLimit` (1–5000), `EnsureOffset`: upstream helpers no controller calls ([known gaps](../concepts/known-gaps.md) item 13). |
 | `Services/Backends/` | `BackendResolver` picks `ReflectionBackend` when the UI thread is initialized, else `FallbackBackend`; both implement `IWaabeNavisworksBackend`. `UiThread` marshals calls onto Navisworks' UI thread; `UiThread.PauseAsync` and `UiSlice` (Cemengal) let a scan hand it back every 100 ms, report progress, stop on cancel and stop if the document changes ([0008](../decisions/0008-one-job-at-a-time.md)). `FallbackBackend` holds most of the Navisworks API and COM code, including `RunSimpleClash` and `ResolveItemsByCanonicalIds`, which matches model ids from the model list before it scans items ([known gaps](../concepts/known-gaps.md)). A failure on the UI thread is not re-run off it. `ScreenCapture` (Cemengal) renders the 3D view (`View.GenerateImage`) or captures the main window (`PrintWindow`) as a PNG ([0010](../decisions/0010-send-code-and-screenshot.md)). |
 | `Services/Code/` (Cemengal) | `CodeRunner` compiles a script with Roslyn (`Microsoft.CodeAnalysis.CSharp` 4.8.0) against every loaded assembly and runs it on the UI thread; `ScriptValue` turns its return value into bounded JSON ([0010](../decisions/0010-send-code-and-screenshot.md)). |
-| `Services/Implementations/`, `Infrastructure/Caching`, `ErrorHandlingMiddleware`, `Telemetry/` | Domain services, response cache, error envelope, metrics for `meta`. |
-| `Dialogs/PortConfigDialog.xaml` | A WPF port dialog (used by the standalone ribbon). |
+| `Services/Implementations/`, `ErrorHandlingMiddleware`, `Telemetry/Metrics.cs` | Domain services, error envelope, the timing in `meta`. |
+| Unused upstream code | `Program.cs` and `Infrastructure/RpcHost.cs`, `Infrastructure/Caching/ResponseCache.cs`, `Mapping/DtoMappers.cs`, `Telemetry/EventSourceIds.cs`, `Dialogs/PortConfigDialog.xaml` and more: nothing calls them ([known gaps](../concepts/known-gaps.md) item 13). |
 
 The server talks to Navisworks through `Autodesk.Navisworks.Api`, the COM bridge (`ComApi`,
 `Interop.ComApi`) and `Autodesk.Navisworks.Api.Clash`, all compile-only from NuGet

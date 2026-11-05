@@ -1,8 +1,8 @@
 ---
 title: "Known gaps — what is missing, unverified or risky"
 type: concept
-updated: 2026-10-24
-sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/FallbackBackend.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Plugins/MCPServerRegistrar.cs]
+updated: 2026-11-05
+sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/FallbackBackend.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Plugins/MCPServerRegistrar.cs, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Client/.mcpbignore]
 related: [../workflows/smoke-test.md, upstream-and-fork.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md]
 tags: [gaps, security, drift]
 ---
@@ -53,14 +53,17 @@ here or in the other C# consumers.
    Also: a clash test cannot pause while Navisworks computes it, and
    `get_property_distribution_by_category` has no scope, so on a large model it reads every property
    of every item (minutes, as a job).
-4. **Stale prebuilt artifacts.** `generated_MCP_Server/waabe_navi_mcp.bundle.zip` and
-   `generated_MCP_Client/waabe-navisworks-mcp.dxt` are upstream's 2026 builds. Do not install them.
+4. **Stale prebuilt artifacts.** `generated_MCP_Server/waabe_navi_mcp.bundle.zip`,
+   `generated_MCP_Client/waabe-navisworks-mcp.dxt` and `MCP_Client/waabe-navisworks-mcp.dxt` (2.2 MB, a different
+   build) are upstream's 2026 builds. Do not install them. The last sits in the folder a pack reads, so since
+   2026-11-05 `.dxtignore` and `.mcpbignore` leave it out of the package ([node client](../modules/node-client.md)).
 5. **No audit log.** CEM_RevitMCP routes every command through an audit log; this server only writes
    `LogHelper` lines to the daily `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log`, `[JOB]` lines
    included, kept 7 days at most ([0011](../decisions/0011-logs-in-local-temp-nothing-under-acc.md)). The last 20 jobs are kept in
    memory only, and forgotten when the AI Modeler restarts.
-6. **Two upstream CS1998 warnings** (async methods without `await`, in `MCPServer.cs` and
-   `FallbackBackend.cs`). Harmless; left as upstream wrote them.
+6. *Resolved by 2026-11-05: no build warnings.* The two upstream CS1998 warnings (async methods without
+   `await`, in `MCPServer.cs` and `FallbackBackend.cs`) are gone: a `--no-incremental` `Debug N27` build of the
+   solution gives 0 warnings and 0 errors.
 7. **German texts.** Dialogs, error messages and logs are mostly German, as upstream wrote them.
 8. **Standalone start-up registration error.** In the standalone bundle, `MCPServerRegistrar.OnLoaded`
    logs `UiThread.InitializeFromCurrentThread: Unerwarteter Context-Typ 'System.Threading.SynchronizationContext'`
@@ -76,3 +79,20 @@ here or in the other C# consumers.
 12. **Scripts cannot pause.** A `send_code_to_navisworks` script runs on the UI thread in one piece: a heavy
    one freezes Navisworks until it ends, and `cancel_job` stops it only if it checks `ct`. Each script also
    leaves a small compiled assembly in memory until Navisworks closes ([0010](../decisions/0010-send-code-and-screenshot.md)).
+13. **Upstream code nothing calls** (checked 2026-11-05 across every Cemengal repo; CEM_NavisworksAPI uses only
+   `CEM_NavisIAModeler.Core`). Kept by [0004](../decisions/0004-minimal-divergence-from-upstream.md) until the user
+   decides; do not build on it as if it ran:
+   - `Program.cs` and `Infrastructure/RpcHost.cs` (an upstream start path; `MCPServerService` starts `MCPServer`);
+   - `Validation/Validators.cs` (no controller calls `EnsureNonEmpty`, `EnsureLimit` or `EnsureOffset`) and the
+     empty `Validation/FluentRules.cs`;
+   - `Infrastructure/Caching/ResponseCache.cs`, with `Settings.ResponseCacheTtlMs` and `EnableResponseCache`, and
+     `Settings.DefaultTimeoutMs`, unused since [0008](../decisions/0008-one-job-at-a-time.md) replaced the fixed timeout;
+   - `Mapping/DtoMappers.cs`, `Telemetry/EventSourceIds.cs`, and in `Contracts/` `ModelTreeQuery`,
+     `ValueSuggestQuery`, `ExportOptions`, `ItemsQuery` and `ClashPairDto`;
+   - `Dialogs/PortConfigDialog.xaml`: the standalone ribbon asks for the port with its own WinForms
+     `PortInputDialog` (`Commands/MCPServerButtonHandler.cs`);
+   - `CEM_NavisIAModeler_Ribbon/Ribbon/ButtonXmlLoader.cs` (the ribbon loads `Helpers/ButtonsXmlLoader`),
+     `CEM_NavisIAModeler_Shared/WaabeRibbon.cs`, and the empty `MCP_Client/server/navisworks-query.js`;
+   - the `Export`, `Visibility` and `System` controllers and the export and visibility services: `RpcMap`
+     creates them but routes none (the `System` routes are commented out);
+   - `node-fetch` in `MCP_Client/server/package.json`: nothing imports it; the client uses Node's own `fetch`.

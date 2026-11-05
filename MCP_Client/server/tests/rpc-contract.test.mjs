@@ -89,6 +89,27 @@ test('clientTools skips the hyphenated server name', () => {
     assert.deepEqual([...names], ['get_x']);
 });
 
+// Test code never ships (CROSS_REPO section 8), nor upstream's stale 2026 package that sits in MCP_Client/.
+// The packer reads one ignore file: the older `dxt` CLI `.dxtignore`, its successor `mcpb` only
+// `.mcpbignore`. On 2026-11-05 an `mcpb pack` of MCP_Client shipped server/tests/ and the stale `.dxt`.
+// This reads the two files; the proof that a pack leaves them out is an `mcpb pack` run (docs/workflows/test.md).
+const ignorePatterns = file => read('MCP_Client', file).split(/\r?\n/)
+    .map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+
+test('both packers leave the tests and stale packages out of the package', () => {
+    for (const file of ['.dxtignore', '.mcpbignore']) {
+        const patterns = ignorePatterns(file).map(p => p.replace(/^\//, ''));
+        for (const pattern of ['server/tests/', '*.dxt']) {
+            assert.ok(patterns.includes(pattern), `MCP_Client/${file} does not exclude ${pattern}`);
+        }
+    }
+});
+
+// An unanchored pattern also matches inside server/node_modules: `src/` would strip debug's src/index.js.
+test('.mcpbignore matches the package root only, never the dependencies', () => {
+    assert.deepEqual(ignorePatterns('.mcpbignore').filter(p => !p.startsWith('/')), []);
+});
+
 // The other tests only read index.js as text; this one makes sure it still parses as a module.
 test('the client parses', async () => {
     const { execFileSync } = await import('node:child_process');

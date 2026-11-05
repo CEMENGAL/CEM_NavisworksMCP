@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP wiki — index"
 type: index
-updated: 2026-11-03
+updated: 2026-11-05
 sources: [README.md, MCP_Server/README.md, MCP_Client/README.md]
 related: [overview.md, log.md]
 tags: [index]
@@ -59,7 +59,7 @@ from the Cemengal tab's **AI → AI Modeler** button (CEM_NavisworksAPI hosts it
 | Pulling from upstream | [upstream and fork](concepts/upstream-and-fork.md), [0004](decisions/0004-minimal-divergence-from-upstream.md) |
 | Connecting Claude | [connect an agent](workflows/connect-an-agent.md) |
 | Call CEM_API from this repo | root [0023](../../../docs/decisions/0023-one-shared-request-layer.md) (C# side), [0019](../../../docs/decisions/0019-cem-csharpextended-shared-csharp-library.md), [0021](../../../docs/decisions/0021-generic-data-endpoints-app-shapes.md), [0025](../../../docs/decisions/0025-desktop-client-deprecation-window.md), CEM_CSharpExtended's [core `Api`](../../../CEM_CSharpExtended/docs/modules/cem-csharpextended.md) |
-| Anything | [known gaps](concepts/known-gaps.md): item ids still scanned from the whole document, scripts that cannot pause, four tools not run live, stale prebuilt artifacts |
+| Anything | [known gaps](concepts/known-gaps.md): item ids still scanned from the whole document, scripts that cannot pause, four tools not run live, stale prebuilt artifacts, upstream code nothing calls |
 
 **4. Build, test, verify:** [build and deploy](workflows/build-and-deploy.md) with `-c "Debug N27"`,
 [test](workflows/test.md) with `npm test` in `MCP_Client/server`, then the [smoke test](workflows/smoke-test.md)
@@ -123,4 +123,4 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [CEM_Workspace#5](sources/issues/CEMENGAL-CEM_Workspace-5.md): the MCPs for the modelling agent; here, QA-10, logging that never throws on a junctioned temp folder (0011).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).
 - [commits 2026-10](sources/commits/2026-10.md): the Cemengal fork, the 2027 port, the rename and the hosting.
-- [commits 2026-11](sources/commits/2026-11.md): the `navisworks` server declared in `.mcp.json`.
+- [commits 2026-11](sources/commits/2026-11.md): the `navisworks` server declared in `.mcp.json`; the 2026-11-05 maintenance review (`.mcpbignore`, the dead upstream code recorded, the proposals not applied).

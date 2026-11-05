@@ -1,8 +1,8 @@
 ---
 title: "MCP_Client — the Node MCP server agents run (cem-navis-aimodeler)"
 type: module
-updated: 2026-10-21
-sources: [MCP_Client/server/index.js, MCP_Client/server/navis-rpc.js, MCP_Client/server/package.json, MCP_Client/manifest.json, MCP_Client/.dxtignore, MCP_Client/server/tests/]
+updated: 2026-11-05
+sources: [MCP_Client/server/index.js, MCP_Client/server/navis-rpc.js, MCP_Client/server/package.json, MCP_Client/manifest.json, MCP_Client/.dxtignore, MCP_Client/.mcpbignore, MCP_Client/server/tests/]
 related: [../concepts/rpc-contract.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, rpc-server.md, ../workflows/connect-an-agent.md, ../workflows/test.md]
 tags: [module, client, mcp, node]
 ---
@@ -40,7 +40,13 @@ as **`cem-navis-aimodeler`** (upstream: `waabe-navisworks-mcp`, renamed by
 - `manifest.json`: the `.dxt` (Desktop Extension) manifest, name `cem-navis-aimodeler`: runs
   `node ${__dirname}/server/index.js` with `NAVISWORKS_API_PORT` from the user setting `api_port`
   (default `"8765"`), and lists the tools.
-- `.dxtignore`: leaves `server/tests/` and `*.test.mjs` out of the `.dxt`, so test code never ships.
+- `.dxtignore` and `.mcpbignore`: leave `server/tests/` and upstream's stale `waabe-navisworks-mcp.dxt` out of
+  the package, so test code never ships. Each packer reads one: the older `dxt` CLI `.dxtignore`, its successor
+  `mcpb` only `.mcpbignore`, so keep them in step. `.mcpbignore`'s patterns start with `/`: an unanchored
+  `src/` or `docs/` also matches inside `server/node_modules` and strips dependencies' code (`debug`'s entry
+  point is `src/index.js`; upstream's `.dxt` lacks it). `rpc-contract.test.mjs` checks both files; an `mcpb pack`
+  into a scratch folder shows what ships (2026-11-05: before, the 9 test files and the 2.2 MB stale `.dxt`; after,
+  neither, `node_modules` unchanged, and the unpacked server lists the same fifteen tools).
 
 Packaging uses the `dxt` CLI, as `MCP_Client/README.md` describes: `dxt validate manifest.json`, then
 `dxt pack . cem-navis-aimodeler.dxt` (optionally `dxt sign … --self-signed`). The committed

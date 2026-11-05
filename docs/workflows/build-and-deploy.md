@@ -1,7 +1,7 @@
 ---
 title: "Build and deploy — Debug N27, hosted or standalone"
 type: workflow
-updated: 2026-10-07
+updated: 2026-11-05
 sources: [MCP_Server/Directory.Build.props, MCP_Server/Directory.Build.targets, MCP_Server/CEM_NavisworksMCP.sln, MCP_Server/CEM_NavisIAModeler_Ribbon/CEM_NavisIAModeler_Ribbon.csproj]
 related: [../decisions/0001-sdk-style-2027-build.md, ../decisions/0002-msbuild-bundle-deploy.md, ../decisions/0006-renamed-and-hosted-by-cem-ribbonui.md, smoke-test.md]
 tags: [build, deploy]
@@ -16,7 +16,9 @@ dotnet build MCP_Server\CEM_NavisworksMCP.sln -c "Release N27" -v minimal -nolog
 
 - **Prerequisites:** a .NET SDK 5.0 or newer. No Navisworks, no 4.8 targeting pack
   ([0001](../decisions/0001-sdk-style-2027-build.md)).
-- **Expected:** 0 errors, 2 warnings (CS1998, in upstream code).
+- **Expected:** 0 errors, 0 warnings (2026-11-05, `--no-incremental`; upstream's two CS1998 warnings are gone,
+  [known gaps](../concepts/known-gaps.md) item 6). In a Cemengal checkout nothing deploys; pass
+  `-p:DeployNavisworksBundle=false` to be sure.
 
 ## Who deploys
 

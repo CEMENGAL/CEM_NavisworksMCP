@@ -2,7 +2,7 @@
 title: "0001 — SDK-style net48 build for Navisworks 2027, with the API from NuGet"
 type: decision
 status: current
-updated: 2026-10-07
+updated: 2026-11-05
 sources: [MCP_Server/Directory.Build.props, MCP_Server/waabe_navi_mcp/waabe_navi.csproj, MCP_Server/waabe_navi_mcp_server/waabe_navi_mcp_server.csproj, MCP_Server/waabe_navi_shared/waabe_navi_shared.csproj, MCP_Server/waabe_navi_mcp.sln]
 related: [0002-msbuild-bundle-deploy.md, ../workflows/build-and-deploy.md, ../../../../CEM_NavisworksAPI/docs/decisions/0001-net48-year-by-configuration.md, ../../../../CEM_NavisworksAPI/docs/decisions/0002-api-from-nuget-compile-only.md]
 tags: [build, msbuild, nuget, port]
@@ -49,5 +49,6 @@ package carries for 2027 (`Automation`, `Interop.ComApiAutomation`, `Navisworks.
   above is unchanged, plus a default year for builds started from another solution.
 
 - `dotnet build MCP_Server\CEM_NavisworksMCP.sln -c "Debug N27"` works anywhere with a .NET 5+ SDK.
-  It gives 0 errors and upstream's 2 CS1998 warnings.
+  It gave 0 errors and upstream's 2 CS1998 warnings; by 2026-11-05 it gives 0 warnings
+  ([known gaps](../concepts/known-gaps.md) item 6).
 - A future upstream change to the csproj files conflicts with ours; keep ours ([upstream and fork](../concepts/upstream-and-fork.md)).

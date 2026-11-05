@@ -13,3 +13,7 @@ tsconfig.json
 .git/
 .gitignore
 README.md
+# Cemengal: packages (upstream's stale 2026 .dxt sits in this folder) and the other packer's ignore file
+*.dxt
+*.mcpb
+.mcpbignore

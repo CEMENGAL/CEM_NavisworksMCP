@@ -2,8 +2,8 @@
 title: "0003 — node:test contract tests pin the method names across client, server and manifest"
 type: decision
 status: current
-updated: 2026-10-07
-sources: [MCP_Client/server/tests/rpc-contract.test.mjs, MCP_Client/server/package.json, MCP_Client/.dxtignore, ../../docs/decisions/0015-clean-cutover-guarded-contracts.md]
+updated: 2026-11-05
+sources: [MCP_Client/server/tests/rpc-contract.test.mjs, MCP_Client/server/package.json, MCP_Client/.dxtignore, MCP_Client/.mcpbignore, ../../docs/decisions/0015-clean-cutover-guarded-contracts.md]
 related: [../concepts/rpc-contract.md, ../workflows/test.md, 0005-no-cors-refuse-browser-origins.md]
 tags: [testing, contract, node]
 ---
@@ -29,7 +29,9 @@ which only shows at run time inside Navisworks. The root pins cross-boundary con
 - Written first: the manifest check failed on arrival (`ping` advertised but not routed; four routes
   missing), and the manifest was then fixed.
 - `server-security.test.mjs` guards [0005](0005-no-cors-refuse-browser-origins.md) the same way.
-- `.dxtignore` excludes `server/tests/` and `*.test.mjs`, so tests never ship in the `.dxt`.
+- `.dxtignore` excludes `server/tests/` and `*.test.mjs`, so tests never ship in the `.dxt`. Since 2026-11-05
+  `.mcpbignore` does the same for `mcpb`, the `dxt` CLI's successor, which reads only that file (an `mcpb pack`
+  had shipped the tests); `rpc-contract.test.mjs` checks both ([node client](../modules/node-client.md)).
 
 **Rejected:**
 - An xunit project over the C# server: the router cannot be built without Navisworks types at run time.

@@ -1,0 +1,9 @@
+# Cemengal: what `mcpb pack` (the `dxt` CLI's successor) leaves out of the package; mcpb reads this file
+# only, the older `dxt` CLI .dxtignore only. Test code never ships (docs/decisions/0003), nor upstream's
+# stale 2026 .dxt in this folder (docs/concepts/known-gaps.md). Every pattern starts with / so it matches
+# the package root only: an unanchored src/ or docs/ also strips dependencies' code in server/node_modules
+# (debug's entry point is src/index.js). mcpb already leaves out *.mcpb, *.log, .env*, .git and lock files.
+/server/tests/
+/*.dxt
+/.dxtignore
+/README.md

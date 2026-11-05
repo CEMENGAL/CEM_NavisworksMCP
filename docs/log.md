@@ -1,7 +1,7 @@
 ---
 title: "Wiki log"
 type: log
-updated: 2026-11-03
+updated: 2026-11-05
 sources: []
 related:
   - index.md
@@ -64,3 +64,6 @@ The QA reviewer's recheck 2 of `2026-11-01-mcp-modeller` found QA-10 (Medium): s
 
 ## [2026-11-03] ingest | The navisworks MCP server declared in .mcp.json
 At the user's request, with no issue link and the reviews skipped by their decision: `.mcp.json` declares `navisworks` with a relative path, so it works from any checkout, and the tracked `.claude/settings.local.json` enables it. Added [sources/commits/2026-11](sources/commits/2026-11.md) with the decisions and the rejected alternatives (an absolute path, a user-level registration only) and listed it in the index. [Connect an agent](workflows/connect-an-agent.md) step 2: no `claude mcp add` inside this repo; `npm install` is still needed. The proof listed 15 tools over stdio; it does not reach Navisworks.
+
+## [2026-11-05] ingest | Overnight maintenance review
+The 2026-11-04/05 maintenance review, committed with no issue link and without the QA and security reviews, by the user's choice. A1: `mcpb`, the `dxt` CLI's successor, reads only `.mcpbignore`, so a pack shipped `server/tests/` and upstream's stale `.dxt`; the new anchored `MCP_Client/.mcpbignore`, three lines in `.dxtignore` and two guards in `rpc-contract.test.mjs` fix it (56/56; the pack loses exactly those 12 files and still lists 15 tools). A2: the build gives 0 warnings ([known gaps](concepts/known-gaps.md) item 6 resolved, [build](workflows/build-and-deploy.md), [0001](decisions/0001-sdk-style-2027-build.md)). A3: new known gaps item 13 lists the upstream code nothing calls; [server](modules/rpc-server.md), [shared](modules/shared.md), [add a tool](workflows/add-a-tool.md) and [0007](decisions/0007-per-user-home-no-writes-next-to-the-dll.md) stop presenting it as live. A4: the third stale upstream package is named (item 4, [connect an agent](workflows/connect-an-agent.md)). Also updated [node client](modules/node-client.md), [0003](decisions/0003-rpc-contract-tests.md), [test](workflows/test.md), the dev skill and the index. Recorded in [sources/commits/2026-11](sources/commits/2026-11.md), with the eight proposals not applied (P1–P8).
