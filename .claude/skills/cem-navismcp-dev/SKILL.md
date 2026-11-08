@@ -16,6 +16,14 @@ Search with qmd when the index is not enough (`qmd query -c cem_navismcp "..."`)
 
 ## Hard rules
 
+- **Any C# you write or touch here follows the C# procedure**: load CEM_CSharpExtended's
+  [cem-csharp-mirror skill](../../../../../CEM_CSharpExtended/.claude/skills/cem-csharp-mirror/SKILL.md) before writing
+  C# ([the procedure](../../../../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md)). New code goes on the mirror
+  structure (root [0041](../../../../../docs/decisions/0041-csharp-libraries-mirror-the-native-one.md)); old library names
+  in a file you touch are migrated in the same change from CEM_CSharpExtended's
+  [migration table](../../../../../CEM_CSharpExtended/docs/modules/migration.md); a reusable helper goes to
+  CEM_CSharpExtended (host-agnostic) or, for Navisworks host code, to CEM_NavisworksAPI_Extended's X classes, never
+  stays in the AI Modeler. Upstream code is still touched only under 0004, but what you touch is migrated.
 - It is a fork: change upstream code only for the 2027 port or a recorded Cemengal need, and mark each change with a
   `Cemengal` comment ([0004](../../../docs/decisions/0004-minimal-divergence-from-upstream.md)).
 - A tool's name is the same in four places: the client's tool list, its `rpc`/`t_simple` call, `RpcMap.cs`, and

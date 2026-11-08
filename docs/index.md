@@ -45,6 +45,10 @@ from the Cemengal tab's **AI → AI Modeler** button (CEM_NavisworksAPI hosts it
    CEM_CSharpExtended's `CemTempFolder` (`%TEMP%\Cemengal\NavisworksMCP`), settings and the token only through
    `CemUserHome`, never in temp; a new file write is classified first; `npm test` guards it
    → [0011](decisions/0011-logs-in-local-temp-nothing-under-acc.md), root [0031](../../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md)
+10. Any C# you write or touch follows CEM_CSharpExtended's C# procedure: new code on the mirror structure, old
+   library names in a touched file migrated in the same change, a reusable helper moved to CEM_CSharpExtended or
+   CEM_NavisworksAPI_Extended → [the C# procedure](../../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md),
+   root [0041](../../../docs/decisions/0041-csharp-libraries-mirror-the-native-one.md)
 
 **3. Before you change X, read Y.**
 
@@ -59,6 +63,7 @@ from the Cemengal tab's **AI → AI Modeler** button (CEM_NavisworksAPI hosts it
 | Pulling from upstream | [upstream and fork](concepts/upstream-and-fork.md), [0004](decisions/0004-minimal-divergence-from-upstream.md) |
 | Connecting Claude | [connect an agent](workflows/connect-an-agent.md) |
 | Call CEM_API from this repo | root [0023](../../../docs/decisions/0023-one-shared-request-layer.md) (C# side), [0019](../../../docs/decisions/0019-cem-csharpextended-shared-csharp-library.md), [0021](../../../docs/decisions/0021-generic-data-endpoints-app-shapes.md), [0025](../../../docs/decisions/0025-desktop-client-deprecation-window.md), CEM_CSharpExtended's [core `Api`](../../../CEM_CSharpExtended/docs/modules/cem-csharpextended.md) |
+| Write or touch any C# (a new class, a helper, a CEM_CSharpExtended name) | [the C# procedure](../../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md) and its `cem-csharp-mirror` skill, CEM_CSharpExtended's [migration table](../../../CEM_CSharpExtended/docs/modules/migration.md), root [0041](../../../docs/decisions/0041-csharp-libraries-mirror-the-native-one.md), [shared](modules/shared.md) |
 | Anything | [known gaps](concepts/known-gaps.md): item ids still scanned from the whole document, scripts that cannot pause, four tools not run live, stale prebuilt artifacts, upstream code nothing calls |
 
 **4. Build, test, verify:** [build and deploy](workflows/build-and-deploy.md) with `-c "Debug N27"`,

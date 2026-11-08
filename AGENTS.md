@@ -8,12 +8,15 @@ a Node MCP client (`MCP_Client/server/`, `cem-navis-aimodeler`).
    change X" table names. The wiki holds the conventions, the decisions and why, and the known gaps.
 2. Follow the canonical skill: [.claude/skills/cem-navismcp-dev/SKILL.md](.claude/skills/cem-navismcp-dev/SKILL.md)
    (hard rules, verify commands).
-3. Cross-repo invariants: [../../CROSS_REPO.md](../../CROSS_REPO.md).
-4. Search the wiki with the qmd CLI when the index is not enough:
+3. Any C# you write or touch follows CEM_CSharpExtended's C# procedure: load
+   `../../CEM_CSharpExtended/.claude/skills/cem-csharp-mirror/SKILL.md` first
+   ([csharp-procedure.md](../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md)).
+4. Cross-repo invariants: [../../CROSS_REPO.md](../../CROSS_REPO.md).
+5. Search the wiki with the qmd CLI when the index is not enough:
    `qmd query -c cem_navismcp "..."`, or `qmd query "..."` across all wikis. Read a hit with
    `qmd get qmd://cem_navismcp/<path>.md`. The collection names are listed in
    [../../tools/wiki/README.md](../../tools/wiki/README.md).
-5. **Commit-time ingest.** Every commit carries its own wiki update in `docs/`:
+6. **Commit-time ingest.** Every commit carries its own wiki update in `docs/`:
    - the source page `sources/issues/<org>-<repo>-<N>.md`, or `sources/commits/<YYYY-MM>.md`, with
      each decision, its reason, and the rejected alternatives
    - the affected pages, and new pages in `index.md`

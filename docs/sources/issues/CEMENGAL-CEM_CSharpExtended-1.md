@@ -40,6 +40,17 @@ stay in `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\Settings
 
 **Verified.** In pass 1: `npm test` and the `Debug N27` build. **Not verified:** the migrated calls in Navisworks.
 
+**The procedure, in the docs and the skill (2026-11-08, pass 2).** The user asked for the new way to proceed
+to be written into the wikis and the skills, so that every agent writing C# here, without being told, writes new
+code on the mirror structure and migrates the old names in a file it touches. Only the procedure: no code, no
+test run. The dev skill's first hard rule, `CLAUDE.md`, `AGENTS.md`, index hard rule 10 and its lookup row, and
+[shared](../../modules/shared.md) point to CEM_CSharpExtended's
+[C# procedure](../../../../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md) and its `cem-csharp-mirror`
+skill. A reusable helper goes to CEM_CSharpExtended or, for Navisworks host code, to CEM_NavisworksAPI_Extended;
+upstream code is still touched only under [0004](../../decisions/0004-minimal-divergence-from-upstream.md), but
+what is touched is migrated. **Rejected:** copying the procedure here (CROSS_REPO: one copy); a repo-local
+conventions page (the repo has none; the index and the skill are where agents look first).
+
 **Open at push time** (from the issue; pushed on request so a new project can start from the foundation): the
 final independent live check, the QA and security reviews and the acceptance run are pending; the migration
 here was not run in Navisworks ([known gaps](../../concepts/known-gaps.md) item 14). Elsewhere: five Navisworks

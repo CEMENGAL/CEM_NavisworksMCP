@@ -11,6 +11,10 @@ names. The wiki holds the conventions, the decisions and their reasons, and the 
 upstream READMEs describe the 2026 proof of concept; the code and the wiki win.
 
 Load the `cem-navismcp-dev` skill (`.claude/skills/cem-navismcp-dev/SKILL.md`) before writing code.
+Any C# you write or touch follows CEM_CSharpExtended's C# procedure (skill
+`../../CEM_CSharpExtended/.claude/skills/cem-csharp-mirror/SKILL.md`, page
+[csharp-procedure.md](../../CEM_CSharpExtended/docs/workflows/csharp-procedure.md)); the dev skill states it.
+
 Cross-repo rules: [../../CROSS_REPO.md](../../CROSS_REPO.md).
 
 Every commit carries its wiki update ([docs/workflows/finish-a-change.md](docs/workflows/finish-a-change.md)).
