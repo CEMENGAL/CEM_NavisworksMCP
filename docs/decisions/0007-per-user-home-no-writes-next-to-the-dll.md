@@ -2,7 +2,7 @@
 title: "0007 — The AI Modeler writes nothing next to its DLL; per-user files live in CemUserHome"
 type: decision
 status: current
-updated: 2026-11-05
+updated: 2026-11-08
 sources:
   - MCP_Server/CEM_NavisIAModeler/Services/SettingsManager.cs
   - MCP_Server/CEM_NavisIAModeler_Shared/LogHelper.cs
@@ -25,7 +25,7 @@ path. Anything written next to the DLL would sync to every colleague and fail wh
   `/manifest` and `/mcp_manifest.json` are served from memory by `ManifestBuilder.Build`. The repo source
   `MCP_Server/CEM_NavisIAModeler/mcp_manifest.json` stays (the contract test reads it) but is not shipped.
 - `Settings\CEM_NavisIAModeler_settings.xml` and `CEM_NavisIAModeler_log.md` resolve through CEM_CSharpExtended's
-  `CemUserHome` (`NavisworksSettingsFile`, `NavisworksFile`): `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle`,
+  `CemUserHome` (since 2026-11-08 `AppSettingsFile("CEM_NavisworksAPI.bundle", …)` and `AppFolder("CEM_NavisworksAPI.bundle")` in `CEM_CSharpExtended.IO`, [CEM_CSharpExtended#1](../sources/issues/CEMENGAL-CEM_CSharpExtended-1.md); they were `NavisworksSettingsFile`, `NavisworksFile`): `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle`,
   also for the standalone bundle. No `Assembly.Location`, no Documents fallback; `%TEMP%` stays the last resort.
   - **Refined by [0011](0011-logs-in-local-temp-nothing-under-acc.md) on 2026-10-24.** A log is not per-user
     state: it moved to `%TEMP%\Cemengal\NavisworksMCP\CEM_NavisIAModeler-yyyyMMdd.log` (CEM_CSharpExtended's

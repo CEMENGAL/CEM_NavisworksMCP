@@ -1,7 +1,7 @@
 ---
 title: "Known gaps — what is missing, unverified or risky"
 type: concept
-updated: 2026-11-05
+updated: 2026-11-08
 sources: [MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs, MCP_Server/CEM_NavisIAModeler/Services/Backends/FallbackBackend.cs, MCP_Server/CEM_NavisIAModeler/Infrastructure/RpcJobs.cs, MCP_Server/CEM_NavisIAModeler/Plugins/MCPServerRegistrar.cs, MCP_Server/CEM_NavisIAModeler/Mapping/RpcMap.cs, MCP_Client/.mcpbignore]
 related: [../workflows/smoke-test.md, upstream-and-fork.md, ../decisions/0008-one-job-at-a-time.md, ../decisions/0009-local-access-token.md, ../decisions/0010-send-code-and-screenshot.md, ../decisions/0011-logs-in-local-temp-nothing-under-acc.md]
 tags: [gaps, security, drift]
@@ -96,3 +96,15 @@ here or in the other C# consumers.
    - the `Export`, `Visibility` and `System` controllers and the export and visibility services: `RpcMap`
      creates them but routes none (the `System` routes are commented out);
    - `node-fetch` in `MCP_Client/server/package.json`: nothing imports it; the client uses Node's own `fetch`.
+14. **Helpers still written here that belong in a library (root 0041), recorded at the
+   [CEM_CSharpExtended#1](../sources/issues/CEMENGAL-CEM_CSharpExtended-1.md) compile migration (2026-11-08) and
+   left for later by its contract (A16: the MCP repos migrate names only):** `FallbackBackend` and
+   `ReflectionBackend` (Navisworks API helpers that `CEM_NavisworksAPI_Extended`'s X classes should own); the
+   `UiThread` delay (`Task.Delay(...).ContinueWith(ctx.Post)`, `UiThread.cs:153`); the bundle name
+   `"CEM_NavisworksAPI.bundle"` written out four times (QA-5: `AccessToken.cs:33,44`, `SettingsManager.cs:33`,
+   `LogHelper.cs:233`), where the host settings of `CEM_NavisworksAPI_Extended`'s `XApplication` should give it;
+   and `navis-rpc.js` `defaultTokenFile`, which spells the same path a fifth time on the client side.
+15. **Open at the 2026-11-08 push of [CEM_CSharpExtended#1](../sources/issues/CEMENGAL-CEM_CSharpExtended-1.md).**
+   Pushed before the independent QA and security reviews and the final live check finished, at the user's
+   request. The renamed calls (token, settings, log path, dependency resolver) were not run in Navisworks
+   after the migration; `npm test` and the build ran in pass 1.

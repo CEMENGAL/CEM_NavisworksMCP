@@ -13,7 +13,7 @@ import { join } from 'node:path';
 
 /**
  * The file the AI Modeler writes its token to at each start: the user's Navisworks settings folder
- * (AccessToken.cs, CemUserHome.NavisworksSettingsFile). NAVISWORKS_TOKEN_FILE overrides it.
+ * (AccessToken.cs, CemUserHome.AppSettingsFile("CEM_NavisworksAPI.bundle", name)). NAVISWORKS_TOKEN_FILE overrides it.
  */
 export function defaultTokenFile(env = process.env) {
     return join(env.APPDATA ?? '', 'Autodesk', 'ApplicationPlugins', 'CEM_NavisworksAPI.bundle', 'Settings', 'CEM_NavisIAModeler.token');

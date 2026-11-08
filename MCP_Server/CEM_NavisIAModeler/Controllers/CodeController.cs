@@ -8,7 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Web.Script.Serialization;
-using CEM_CSharpExtended.Hosting;
+using CEM_CSharpExtended;
 using CEM_NavisIAModeler.Contracts;
 using CEM_NavisIAModeler.Infrastructure;
 using CEM_NavisIAModeler.Services.Backends;
@@ -38,12 +38,12 @@ namespace CEM_NavisIAModeler.Controllers
                     : new string[0];
 
                 // The bundle's binding redirects, before the first Roslyn type loads (Execute below).
-                DependencyResolver.Install();
+                AppDomain.CurrentDomain.InstallDependencyResolver();
                 return Execute(code, parameters, RpcJobs.CurrentToken);
             });
         }
 
-        // A method of its own, so the JIT loads Roslyn's types only once DependencyResolver is installed.
+        // A method of its own, so the JIT loads Roslyn's types only once the dependency resolver is installed.
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static RpcResponse<CodeRunDto> Execute(string code, string[] parameters, CancellationToken ct)
         {

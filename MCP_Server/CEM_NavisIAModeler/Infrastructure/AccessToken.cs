@@ -10,7 +10,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using CEM_CSharpExtended.Hosting;
+using CEM_CSharpExtended.IO;
 using CEM_NavisIAModeler_Shared;
 
 namespace CEM_NavisIAModeler.Infrastructure
@@ -30,7 +30,7 @@ namespace CEM_NavisIAModeler.Infrastructure
                 rng.GetBytes(bytes);
             var token = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
 
-            File.WriteAllText(CemUserHome.NavisworksSettingsFile(FileName), token, new UTF8Encoding(false));
+            File.WriteAllText(CemUserHome.AppSettingsFile("CEM_NavisworksAPI.bundle", FileName), token, new UTF8Encoding(false));
             LogHelper.LogEvent("[TOKEN] issued");
             return token;
         }
@@ -41,7 +41,7 @@ namespace CEM_NavisIAModeler.Infrastructure
             if (string.IsNullOrEmpty(token)) return;
             try
             {
-                var path = CemUserHome.NavisworksSettingsFile(FileName);
+                var path = CemUserHome.AppSettingsFile("CEM_NavisworksAPI.bundle", FileName);
                 if (File.Exists(path) && File.ReadAllText(path).Trim() == token)
                     File.Delete(path);
             }

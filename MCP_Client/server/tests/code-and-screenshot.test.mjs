@@ -16,7 +16,7 @@ const controller = live(read('Controllers', 'CodeController.cs'));
 const runner = live(read('Services', 'Code', 'CodeRunner.cs'));
 
 test('the redirects are installed before Roslyn is touched', () => {
-    assert.match(controller, /DependencyResolver\.Install\(\)/);
+    assert.match(controller, /AppDomain\.CurrentDomain\.InstallDependencyResolver\(\)/);
     assert.doesNotMatch(controller, /Microsoft\.CodeAnalysis/, 'the controller method must not make the JIT load Roslyn');
     assert.match(runner, /Microsoft\.CodeAnalysis/);
 });

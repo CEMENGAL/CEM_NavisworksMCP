@@ -2,7 +2,7 @@
 title: "0009 — A local access token on every request"
 type: decision
 status: current
-updated: 2026-10-21
+updated: 2026-11-08
 sources:
   - MCP_Server/CEM_NavisIAModeler/Infrastructure/AccessToken.cs
   - MCP_Server/CEM_NavisIAModeler/Services/MCPServer.cs
@@ -33,7 +33,7 @@ for the code tool on 2026-10-21, so the token comes first, here.
 
 - At each start, once the port is bound, the server creates a random token (32 bytes, hex) and writes it
   to `CEM_NavisIAModeler.token` in the user's Navisworks settings folder,
-  `CemUserHome.NavisworksSettingsFile` (`%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\Settings`,
+  `CemUserHome.AppSettingsFile("CEM_NavisworksAPI.bundle", …)` (`CEM_CSharpExtended.IO`, renamed 2026-11-08 by [CEM_CSharpExtended#1](../sources/issues/CEMENGAL-CEM_CSharpExtended-1.md); `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\Settings`,
   the one home of [0007](0007-per-user-home-no-writes-next-to-the-dll.md)). Other Windows users cannot
   read it. If it cannot be written, the server does not start. It deletes the file when it stops, if the
   file still holds its token.

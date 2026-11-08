@@ -1,7 +1,7 @@
 ---
 title: "CEM_NavisworksMCP wiki — index"
 type: index
-updated: 2026-11-05
+updated: 2026-11-08
 sources: [README.md, MCP_Server/README.md, MCP_Client/README.md]
 related: [overview.md, log.md]
 tags: [index]
@@ -120,6 +120,7 @@ update. Lint with `python ../../tools/wiki/wiki_lint.py .`. The message is one l
 - [CEM_API#68](sources/issues/CEM-EnriqueRuiz-CEM_API-68.md): the wiki for every repo; here, qmd through the machine's shared server (open).
 - [CEM_API#74](sources/issues/CEM-EnriqueRuiz-CEM_API-74.md): one shared request layer per language; here, the C# rule and the 2026-10-11 review (open).
 - [CEM_API#82](sources/issues/CEM-EnriqueRuiz-CEM_API-82.md): "Borrar logs in ACC de los MCP": the file-write audit, the log in a self-cleaning local temp folder, settings never in temp (0011).
+- [CEM_CSharpExtended#1](sources/issues/CEMENGAL-CEM_CSharpExtended-1.md): C# libraries mirror the native one (root 0041); here, the compile migration to the new names only.
 - [CEM_Workspace#5](sources/issues/CEMENGAL-CEM_Workspace-5.md): the MCPs for the modelling agent; here, QA-10, logging that never throws on a junctioned temp folder (0011).
 - [commits 2025-09](sources/commits/2025-09.md): the upstream proof of concept (29 commits, 2025-09-22).
 - [commits 2026-10](sources/commits/2026-10.md): the Cemengal fork, the 2027 port, the rename and the hosting.

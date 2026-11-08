@@ -27,7 +27,7 @@ test('the standalone bundle does not ship a written mcp_manifest.json', () => {
 test('settings resolve through CemUserHome and the log through CemTempFolder, never from the DLL folder', () => {
     const settings = server('CEM_NavisIAModeler', 'Services', 'SettingsManager.cs');
     const log = server('CEM_NavisIAModeler_Shared', 'LogHelper.cs');
-    assert.match(settings, /CemUserHome\.NavisworksSettingsFile\(/);
+    assert.match(settings, /CemUserHome\.AppSettingsFile\(/);
     assert.match(log, /CemTempFolder\.AppendLog\(/); // root 0031, file-writes.test.mjs
     for (const [name, src] of [['SettingsManager', settings], ['LogHelper', log]]) {
         assert.doesNotMatch(src.replace(/\/\/.*$/gm, ''), /GetDirectoryName\(|SpecialFolder\.MyDocuments|ApplicationPlugins/, `${name} derives a path`);

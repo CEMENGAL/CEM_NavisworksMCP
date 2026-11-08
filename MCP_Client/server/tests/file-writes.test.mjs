@@ -63,7 +63,7 @@ test('the C# files that write are exactly the per-user settings and the access t
 
 test('those writers resolve their path in CemUserHome, never from the DLL folder or the temp folder', () => {
     for (const { path, code } of writers) {
-        assert.match(code, /CemUserHome\.NavisworksSettingsFile\(/, `${name(path)} writes outside CemUserHome`);
+        assert.match(code, /CemUserHome\.AppSettingsFile\(/, `${name(path)} writes outside CemUserHome`);
         assert.doesNotMatch(code, /Assembly\.\w+\(\)\.(Location|CodeBase)|\.Location\b|BaseDirectory|GetDirectoryName\(|GetTempPath|SpecialFolder|GetEnvironmentVariable/,
             `${name(path)} derives a write path itself`);
     }
@@ -89,7 +89,7 @@ test('the log is a daily file in %TEMP%\\Cemengal\\NavisworksMCP, through CemTem
     assert.match(code, /App\s*=\s*"NavisworksMCP"/);
     assert.match(code, /Name\s*=\s*"CEM_NavisIAModeler"/);
     assert.match(code, /CemTempFolder\.LogFile\(\s*App\s*,\s*Name\s*\)/, 'GetCurrentLogPath names the same file');
-    assert.doesNotMatch(code, /CemUserHome\.NavisworksFile\(/, 'a log is not per-user state: it does not go to roaming AppData');
+    assert.doesNotMatch(code, /CemUserHome\.AppFile\(/, 'a log is not per-user state: it does not go to roaming AppData');
 });
 
 test('settings never fall back to temp: without CemUserHome they stay in memory', () => {

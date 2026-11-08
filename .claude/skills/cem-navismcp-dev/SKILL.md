@@ -31,7 +31,7 @@ Search with qmd when the index is not enough (`qmd query -c cem_navismcp "..."`)
   without the token ([0005](../../../docs/decisions/0005-no-cors-refuse-browser-origins.md),
   [0009](../../../docs/decisions/0009-local-access-token.md)); `npm test` guards all three.
 - `send_code_to_navisworks` compiles on the job's thread and runs on the UI thread; scripts are never logged or
-  written; Roslyn loads only after `DependencyResolver.Install()` ([0010](../../../docs/decisions/0010-send-code-and-screenshot.md)).
+  written; Roslyn loads only after `AppDomain.CurrentDomain.InstallDependencyResolver()` ([0010](../../../docs/decisions/0010-send-code-and-screenshot.md)).
 - Test code never ships: `MCP_Client/.dxtignore` (the `dxt` CLI) and `MCP_Client/.mcpbignore` (`mcpb`, which reads
   only that file) exclude `server/tests/`; `.mcpbignore`'s patterns start with `/`, or they strip `node_modules` code.
 - Any CEM_API call goes through CEM_CSharpExtended's `Api`; never spell a CEM_API route or URL in this repo

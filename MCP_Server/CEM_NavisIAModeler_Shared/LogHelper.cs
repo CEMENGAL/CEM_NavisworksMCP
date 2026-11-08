@@ -1,5 +1,5 @@
 ﻿using Autodesk.Navisworks.Api;
-using CEM_CSharpExtended.Hosting;
+using CEM_CSharpExtended.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -230,7 +230,7 @@ namespace CEM_NavisIAModeler_Shared
         {
             try
             {
-                LogDebug($"Per-user home: {CemUserHome.NavisworksFolder}");
+                LogDebug($"Per-user home: {CemUserHome.AppFolder("CEM_NavisworksAPI.bundle")}");
                 LogDebug($"Finaler Log-Pfad: {GetCurrentLogPath()}");
             }
             catch (Exception ex)

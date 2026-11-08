@@ -21,7 +21,7 @@ const httpSource = live(read('MCP_Server', 'CEM_NavisIAModeler', 'Services', 'MC
 test('both halves use the same token file, in the user\'s settings folder', () => {
     const fileName = tokenSource.match(/FileName\s*=\s*"([^"]+)"/)?.[1];
     assert.ok(fileName, 'AccessToken.cs declares FileName');
-    assert.match(tokenSource, /CemUserHome\.NavisworksSettingsFile\(\s*FileName\s*\)/);
+    assert.match(tokenSource, /CemUserHome\.AppSettingsFile\(\s*"CEM_NavisworksAPI\.bundle"\s*,\s*FileName\s*\)/);
 
     const clientPath = defaultTokenFile({ APPDATA: 'C:\\Users\\u\\AppData\\Roaming' });
     assert.equal(clientPath.replace(/\//g, '\\'),

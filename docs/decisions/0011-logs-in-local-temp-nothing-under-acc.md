@@ -2,7 +2,7 @@
 title: "0011 — Nothing under ACC; the log in a self-cleaning local temp folder, settings never in temp"
 type: decision
 status: current
-updated: 2026-11-01
+updated: 2026-11-08
 sources:
   - https://github.com/CEM-EnriqueRuiz/CEM_API/issues/82
   - ../../docs/decisions/0031-nothing-writes-under-acc-logs-in-local-temp.md
@@ -38,7 +38,7 @@ The audit of every file write in this repo that day:
 
 | Writer | What | Where, before | Verdict |
 |---|---|---|---|
-| `LogHelper` (Shared) | log | `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\CEM_NavisIAModeler_log.md` (`CemUserHome.NavisworksFile`, [0007](0007-per-user-home-no-writes-next-to-the-dll.md)): one Markdown table that never shrank (371 KB), in the roaming profile; `%TEMP%\CEM_NavisIAModeler_log.md` when `CemUserHome` threw; `%TEMP%\CEM_NavisIAModeler_fallback_log.md` when an append failed (two unshared `File.AppendAllLines` colliding) | breaks 0031 §2 and §4: moved |
+| `LogHelper` (Shared) | log | `%APPDATA%\Autodesk\ApplicationPlugins\CEM_NavisworksAPI.bundle\CEM_NavisIAModeler_log.md` (`CemUserHome.NavisworksFile`, now `AppFile`, [0007](0007-per-user-home-no-writes-next-to-the-dll.md)): one Markdown table that never shrank (371 KB), in the roaming profile; `%TEMP%\CEM_NavisIAModeler_log.md` when `CemUserHome` threw; `%TEMP%\CEM_NavisIAModeler_fallback_log.md` when an append failed (two unshared `File.AppendAllLines` colliding) | breaks 0031 §2 and §4: moved |
 | `SettingsManager` | per-user settings | `CemUserHome\Settings\CEM_NavisIAModeler_settings.xml`; `%TEMP%\CEM_NavisIAModeler_settings.xml` when `CemUserHome` threw | the fallback breaks 0031 §5: removed |
 | `AccessToken` | per-user state | `CemUserHome\Settings\CEM_NavisIAModeler.token`, at start; deleted at stop ([0009](0009-local-access-token.md)) | stays; the client only reads it |
 | `take_screenshot` (`ScreenCapture`) | image | nothing: a PNG in a `MemoryStream`, returned as MCP image content ([0010](0010-send-code-and-screenshot.md)) | stays |

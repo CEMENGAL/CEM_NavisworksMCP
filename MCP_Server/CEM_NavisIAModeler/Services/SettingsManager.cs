@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using CEM_CSharpExtended.Hosting;
+using CEM_CSharpExtended.IO;
 using CEM_NavisIAModeler_Shared;
 
 namespace CEM_NavisIAModeler.Services
@@ -30,7 +30,7 @@ namespace CEM_NavisIAModeler.Services
         {
             try
             {
-                var settingsFile = CemUserHome.NavisworksSettingsFile("CEM_NavisIAModeler_settings.xml");
+                var settingsFile = CemUserHome.AppSettingsFile("CEM_NavisworksAPI.bundle", "CEM_NavisIAModeler_settings.xml");
                 if (!File.Exists(settingsFile))
                 {
                     CreateDefaultSettings(settingsFile);

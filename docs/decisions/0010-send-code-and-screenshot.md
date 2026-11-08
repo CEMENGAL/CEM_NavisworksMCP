@@ -2,7 +2,7 @@
 title: "0010 — send_code_to_navisworks and take_screenshot"
 type: decision
 status: current
-updated: 2026-10-21
+updated: 2026-11-08
 sources:
   - MCP_Server/CEM_NavisIAModeler/Controllers/CodeController.cs
   - MCP_Server/CEM_NavisIAModeler/Services/Code/CodeRunner.cs
@@ -44,7 +44,7 @@ and lets the agent look with `take_screenshot`. The user asked for both here on 
   **UI thread**, as a job ([0008](0008-one-job-at-a-time.md)) behind the token ([0009](0009-local-access-token.md)).
 - References: every assembly loaded in Navisworks, the newest of each name, plus the `netstandard` facade.
   So a script reaches the Navisworks API, Clash Detective, COM and the Cemengal add-ins.
-- CEM_CSharpExtended's `DependencyResolver` is installed before the first Roslyn type loads: Navisworks
+- CEM_CSharpExtended's dependency resolver (`AppDomain.CurrentDomain.InstallDependencyResolver()`, `DependencyResolver.Install()` until [CEM_CSharpExtended#1](../sources/issues/CEMENGAL-CEM_CSharpExtended-1.md)) is installed before the first Roslyn type loads: Navisworks
   has no binding redirects for the add-in's dependencies.
 - The reply: the returned value as bounded JSON, its type, the console output (100,000 characters at
   most), compile and run times, and the warnings. `ScriptValue` turns Navisworks objects into text (a
